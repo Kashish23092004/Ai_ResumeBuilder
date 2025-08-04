@@ -11,6 +11,13 @@ export default function MyTemplate1() {
   const [editMode, setEditMode] = useState(false);
   const [localData, setLocalData] = useState(resumeData);
   const [currentTheme, setCurrentTheme] = useState("gradient-purple");
+  const [currentFont, setCurrentFont] = useState("font-sans");
+  const [customColors, setCustomColors] = useState({
+    primary: "#8b5cf6",
+    secondary: "#6366f1",
+    accent: "#f3e8ff",
+    text: "#581c87"
+  });
 
   useEffect(() => {
     setLocalData(resumeData);
@@ -55,10 +62,62 @@ export default function MyTemplate1() {
     },
   };
 
+  const fonts = [
+    { name: "Sans Serif", class: "font-sans" },
+    { name: "Serif", class: "font-serif" },
+    { name: "Monospace", class: "font-mono" },
+    { name: "Display", class: "font-display" },
+  ];
+
   const theme = themes[currentTheme];
 
   const handleFieldChange = (field, value) => {
     setLocalData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleArrayFieldChange = (field, index, value) => {
+    setLocalData((prev) => {
+      const updated = [...(prev[field] || [])];
+      updated[index] = value;
+      return { ...prev, [field]: updated };
+    });
+  };
+
+  const addExperience = () => {
+    setLocalData((prev) => ({
+      ...prev,
+      experience: [
+        ...(prev.experience || []),
+        {
+          title: "",
+          companyName: "",
+          date: "",
+          companyLocation: "",
+          accomplishment: []
+        }
+      ]
+    }));
+  };
+
+  const removeExperience = (index) => {
+    setLocalData((prev) => ({
+      ...prev,
+      experience: prev.experience.filter((_, i) => i !== index)
+    }));
+  };
+
+  const addSkill = () => {
+    setLocalData((prev) => ({
+      ...prev,
+      skills: [...(prev.skills || []), ""]
+    }));
+  };
+
+  const removeSkill = (index) => {
+    setLocalData((prev) => ({
+      ...prev,
+      skills: prev.skills.filter((_, i) => i !== index)
+    }));
   };
 
   const handleSave = () => {
@@ -74,6 +133,10 @@ export default function MyTemplate1() {
   const handleDownload = async () => {
     try {
       setEditMode(false);
+      
+      // Wait a bit for the DOM to update
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const element = resumeRef.current;
       if (!element) throw new Error('Resume element not found');
       
@@ -83,18 +146,25 @@ export default function MyTemplate1() {
         backgroundColor: '#ffffff',
         width: 595,
         height: 842,
+        logging: false,
+        allowTaint: true,
+        foreignObjectRendering: true
       });
       
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'portrait',
-        unit: 'px',
-        format: [595, 842],
+        unit: 'pt',
+        format: 'a4'
       });
       
-      pdf.addImage(imgData, 'PNG', 0, 0, 595, 842);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
       pdf.save('resume.pdf');
     } catch (error) {
+      console.error('PDF generation error:', error);
       alert(`Failed to generate PDF: ${error.message}`);
     }
   };
@@ -105,29 +175,72 @@ export default function MyTemplate1() {
       <div className="flex">
         <Sidebar />
         <div className="flex-1 p-8">
-          {/* Theme Selector */}
-          <div className="mb-6 flex justify-center gap-4">
-            {Object.keys(themes).map((themeKey) => (
-              <button
-                key={themeKey}
-                onClick={() => setCurrentTheme(themeKey)}
-                className={`px-4 py-2 rounded-lg text-white font-medium transition-all ${
-                  currentTheme === themeKey
-                    ? 'ring-2 ring-offset-2 ring-purple-500'
-                    : 'opacity-70 hover:opacity-100'
-                } ${themes[themeKey].button}`}
+          {/* Customization Panel */}
+          <div className="mb-6 flex justify-center gap-4 flex-wrap">
+            {/* Theme Selector */}
+            <div className="flex gap-2">
+              {Object.keys(themes).map((themeKey) => (
+                <button
+                  key={themeKey}
+                  onClick={() => setCurrentTheme(themeKey)}
+                  className={`px-4 py-2 rounded-lg text-white font-medium transition-all ${
+                    currentTheme === themeKey
+                      ? 'ring-2 ring-offset-2 ring-purple-500'
+                      : 'opacity-70 hover:opacity-100'
+                  } ${themes[themeKey].button}`}
+                >
+                  {themeKey.replace('gradient-', '').charAt(0).toUpperCase() + 
+                   themeKey.replace('gradient-', '').slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {/* Font Selector */}
+            <div className="flex gap-2">
+              <select
+                value={currentFont}
+                onChange={(e) => setCurrentFont(e.target.value)}
+                className="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500"
               >
-                {themeKey.replace('gradient-', '').charAt(0).toUpperCase() + 
-                 themeKey.replace('gradient-', '').slice(1)}
-              </button>
-            ))}
+                {fonts.map((font) => (
+                  <option key={font.class} value={font.class}>
+                    {font.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Color Customization */}
+            <div className="flex gap-2">
+              <input
+                type="color"
+                value={customColors.primary}
+                onChange={(e) => setCustomColors(prev => ({ ...prev, primary: e.target.value }))}
+                className="w-12 h-10 rounded border border-gray-300"
+                title="Primary Color"
+              />
+              <input
+                type="color"
+                value={customColors.secondary}
+                onChange={(e) => setCustomColors(prev => ({ ...prev, secondary: e.target.value }))}
+                className="w-12 h-10 rounded border border-gray-300"
+                title="Secondary Color"
+              />
+              <input
+                type="color"
+                value={customColors.accent}
+                onChange={(e) => setCustomColors(prev => ({ ...prev, accent: e.target.value }))}
+                className="w-12 h-10 rounded border border-gray-300"
+                title="Accent Color"
+              />
+            </div>
           </div>
 
           {/* Resume Container */}
           <div className="flex justify-center">
             <div
               ref={resumeRef}
-              className="w-[595pt] h-[842pt] bg-white shadow-2xl rounded-lg overflow-hidden border-4 border-gray-200"
+              className={`w-[595pt] h-[842pt] bg-white shadow-2xl rounded-lg overflow-hidden border-4 border-gray-200 ${currentFont}`}
               style={{ width: "595pt", height: "842pt" }}
             >
               {/* Creative Header with Shapes */}
@@ -170,19 +283,59 @@ export default function MyTemplate1() {
                 <div className="flex flex-wrap justify-center gap-6 text-sm">
                   <div className="flex items-center gap-2 hover:scale-105 transition-transform">
                     <span className="text-lg">📍</span>
-                    <span>{resumeData.location}</span>
+                    {editMode ? (
+                      <input
+                        type="text"
+                        value={localData.location}
+                        onChange={(e) => handleFieldChange("location", e.target.value)}
+                        className="bg-transparent text-white placeholder-white placeholder-opacity-80 border-b border-white border-opacity-30 focus:border-opacity-100"
+                        placeholder="Location"
+                      />
+                    ) : (
+                      <span>{resumeData.location}</span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 hover:scale-105 transition-transform">
                     <span className="text-lg">📞</span>
-                    <span>{resumeData.phone}</span>
+                    {editMode ? (
+                      <input
+                        type="text"
+                        value={localData.phone}
+                        onChange={(e) => handleFieldChange("phone", e.target.value)}
+                        className="bg-transparent text-white placeholder-white placeholder-opacity-80 border-b border-white border-opacity-30 focus:border-opacity-100"
+                        placeholder="Phone"
+                      />
+                    ) : (
+                      <span>{resumeData.phone}</span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 hover:scale-105 transition-transform">
                     <span className="text-lg">✉️</span>
-                    <span>{resumeData.email}</span>
+                    {editMode ? (
+                      <input
+                        type="text"
+                        value={localData.email}
+                        onChange={(e) => handleFieldChange("email", e.target.value)}
+                        className="bg-transparent text-white placeholder-white placeholder-opacity-80 border-b border-white border-opacity-30 focus:border-opacity-100"
+                        placeholder="Email"
+                      />
+                    ) : (
+                      <span>{resumeData.email}</span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 hover:scale-105 transition-transform">
                     <span className="text-lg">🔗</span>
-                    <span>{resumeData.linkedin}</span>
+                    {editMode ? (
+                      <input
+                        type="text"
+                        value={localData.linkedin}
+                        onChange={(e) => handleFieldChange("linkedin", e.target.value)}
+                        className="bg-transparent text-white placeholder-white placeholder-opacity-80 border-b border-white border-opacity-30 focus:border-opacity-100"
+                        placeholder="LinkedIn"
+                      />
+                    ) : (
+                      <span>{resumeData.linkedin}</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -193,17 +346,44 @@ export default function MyTemplate1() {
                 <div className="w-1/3 p-6 bg-gray-50">
                   {/* Skills Section */}
                   <div className="mb-8">
-                    <h3 className={`text-xl font-bold mb-4 ${theme.text} flex items-center gap-2`}>
-                      <span className="text-2xl">🛠️</span>
-                      Skills
-                    </h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className={`text-xl font-bold ${theme.text} flex items-center gap-2`}>
+                        <span className="text-2xl">🛠️</span>
+                        Skills
+                      </h3>
+                      {editMode && (
+                        <button
+                          onClick={addSkill}
+                          className="text-sm bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+                        >
+                          +
+                        </button>
+                      )}
+                    </div>
                     <div className="space-y-2">
                       {resumeData.skills?.map((skill, idx) => (
-                        <div
-                          key={idx}
-                          className={`px-3 py-2 rounded-lg ${theme.accent} ${theme.text} font-medium text-sm hover:scale-105 transition-transform cursor-pointer`}
-                        >
-                          {skill}
+                        <div key={idx} className="flex items-center gap-2">
+                          {editMode ? (
+                            <>
+                              <input
+                                type="text"
+                                value={localData.skills[idx] || ""}
+                                onChange={(e) => handleArrayFieldChange("skills", idx, e.target.value)}
+                                className={`flex-1 px-3 py-2 rounded-lg ${theme.accent} ${theme.text} font-medium text-sm border border-transparent focus:border-purple-300`}
+                                placeholder="Skill"
+                              />
+                              <button
+                                onClick={() => removeSkill(idx)}
+                                className="text-red-500 hover:text-red-700 text-sm"
+                              >
+                                ×
+                              </button>
+                            </>
+                          ) : (
+                            <div className={`px-3 py-2 rounded-lg ${theme.accent} ${theme.text} font-medium text-sm hover:scale-105 transition-transform cursor-pointer`}>
+                              {skill}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -296,10 +476,20 @@ export default function MyTemplate1() {
 
                   {/* Experience Section */}
                   <div className="mb-8">
-                    <h3 className={`text-xl font-bold mb-6 ${theme.text} flex items-center gap-2`}>
-                      <span className="text-2xl">💼</span>
-                      Experience
-                    </h3>
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className={`text-xl font-bold ${theme.text} flex items-center gap-2`}>
+                        <span className="text-2xl">💼</span>
+                        Experience
+                      </h3>
+                      {editMode && (
+                        <button
+                          onClick={addExperience}
+                          className="text-sm bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+                        >
+                          + Add Experience
+                        </button>
+                      )}
+                    </div>
                     <div className="space-y-6">
                       {resumeData.experience.map((exp, idx) => (
                         <div key={idx} className="relative">
@@ -308,6 +498,15 @@ export default function MyTemplate1() {
                           <div className="pl-8">
                             {editMode ? (
                               <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="font-bold text-gray-900">Experience #{idx + 1}</h4>
+                                  <button
+                                    onClick={() => removeExperience(idx)}
+                                    className="text-red-500 hover:text-red-700 text-sm"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
                                 <input
                                   type="text"
                                   value={localData.experience[idx]?.title || ""}

@@ -11,6 +11,13 @@ const MyTemplate2 = () => {
   const [editMode, setEditMode] = useState(false);
   const [localData, setLocalData] = useState(resumeData);
   const [currentTheme, setCurrentTheme] = useState("professional-blue");
+  const [currentFont, setCurrentFont] = useState("font-sans");
+  const [customColors, setCustomColors] = useState({
+    primary: "#2563eb",
+    secondary: "#374151",
+    accent: "#eff6ff",
+    text: "#1e40af"
+  });
 
   useEffect(() => {
     setLocalData(resumeData);
@@ -59,10 +66,62 @@ const MyTemplate2 = () => {
     },
   };
 
+  const fonts = [
+    { name: "Sans Serif", class: "font-sans" },
+    { name: "Serif", class: "font-serif" },
+    { name: "Monospace", class: "font-mono" },
+    { name: "Display", class: "font-display" },
+  ];
+
   const theme = themes[currentTheme];
 
   const handleFieldChange = (field, value) => {
     setLocalData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleArrayFieldChange = (field, index, value) => {
+    setLocalData((prev) => {
+      const updated = [...(prev[field] || [])];
+      updated[index] = value;
+      return { ...prev, [field]: updated };
+    });
+  };
+
+  const addExperience = () => {
+    setLocalData((prev) => ({
+      ...prev,
+      experience: [
+        ...(prev.experience || []),
+        {
+          title: "",
+          companyName: "",
+          date: "",
+          companyLocation: "",
+          accomplishment: []
+        }
+      ]
+    }));
+  };
+
+  const removeExperience = (index) => {
+    setLocalData((prev) => ({
+      ...prev,
+      experience: prev.experience.filter((_, i) => i !== index)
+    }));
+  };
+
+  const addSkill = () => {
+    setLocalData((prev) => ({
+      ...prev,
+      skills: [...(prev.skills || []), ""]
+    }));
+  };
+
+  const removeSkill = (index) => {
+    setLocalData((prev) => ({
+      ...prev,
+      skills: prev.skills.filter((_, i) => i !== index)
+    }));
   };
 
   const handleSave = () => {
@@ -78,6 +137,10 @@ const MyTemplate2 = () => {
   const handleDownload = async () => {
     try {
       setEditMode(false);
+      
+      // Wait a bit for the DOM to update
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const element = resumeRef.current;
       if (!element) throw new Error('Resume element not found');
       
@@ -87,18 +150,25 @@ const MyTemplate2 = () => {
         backgroundColor: '#ffffff',
         width: 595,
         height: 842,
+        logging: false,
+        allowTaint: true,
+        foreignObjectRendering: true
       });
       
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'portrait',
-        unit: 'px',
-        format: [595, 842],
+        unit: 'pt',
+        format: 'a4'
       });
       
-      pdf.addImage(imgData, 'PNG', 0, 0, 595, 842);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
       pdf.save('resume.pdf');
     } catch (error) {
+      console.error('PDF generation error:', error);
       alert(`Failed to generate PDF: ${error.message}`);
     }
   };
@@ -109,29 +179,72 @@ const MyTemplate2 = () => {
       <div className="flex">
         <Sidebar />
         <div className="flex-1 p-8">
-          {/* Theme Selector */}
-          <div className="mb-6 flex justify-center gap-4">
-            {Object.keys(themes).map((themeKey) => (
-              <button
-                key={themeKey}
-                onClick={() => setCurrentTheme(themeKey)}
-                className={`px-4 py-2 rounded-lg text-white font-medium transition-all ${
-                  currentTheme === themeKey
-                    ? 'ring-2 ring-offset-2 ring-blue-500'
-                    : 'opacity-70 hover:opacity-100'
-                } ${themes[themeKey].button}`}
+          {/* Customization Panel */}
+          <div className="mb-6 flex justify-center gap-4 flex-wrap">
+            {/* Theme Selector */}
+            <div className="flex gap-2">
+              {Object.keys(themes).map((themeKey) => (
+                <button
+                  key={themeKey}
+                  onClick={() => setCurrentTheme(themeKey)}
+                  className={`px-4 py-2 rounded-lg text-white font-medium transition-all ${
+                    currentTheme === themeKey
+                      ? 'ring-2 ring-offset-2 ring-blue-500'
+                      : 'opacity-70 hover:opacity-100'
+                  } ${themes[themeKey].button}`}
+                >
+                  {themeKey.replace('professional-', '').charAt(0).toUpperCase() + 
+                   themeKey.replace('professional-', '').slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {/* Font Selector */}
+            <div className="flex gap-2">
+              <select
+                value={currentFont}
+                onChange={(e) => setCurrentFont(e.target.value)}
+                className="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
               >
-                {themeKey.replace('professional-', '').charAt(0).toUpperCase() + 
-                 themeKey.replace('professional-', '').slice(1)}
-              </button>
-            ))}
+                {fonts.map((font) => (
+                  <option key={font.class} value={font.class}>
+                    {font.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Color Customization */}
+            <div className="flex gap-2">
+              <input
+                type="color"
+                value={customColors.primary}
+                onChange={(e) => setCustomColors(prev => ({ ...prev, primary: e.target.value }))}
+                className="w-12 h-10 rounded border border-gray-300"
+                title="Primary Color"
+              />
+              <input
+                type="color"
+                value={customColors.secondary}
+                onChange={(e) => setCustomColors(prev => ({ ...prev, secondary: e.target.value }))}
+                className="w-12 h-10 rounded border border-gray-300"
+                title="Secondary Color"
+              />
+              <input
+                type="color"
+                value={customColors.accent}
+                onChange={(e) => setCustomColors(prev => ({ ...prev, accent: e.target.value }))}
+                className="w-12 h-10 rounded border border-gray-300"
+                title="Accent Color"
+              />
+            </div>
           </div>
 
           {/* Resume Container */}
           <div className="flex justify-center">
             <div
               ref={resumeRef}
-              className="w-[595pt] h-[842pt] bg-white shadow-lg border-2 border-gray-300"
+              className={`w-[595pt] h-[842pt] bg-white shadow-lg border-2 border-gray-300 ${currentFont}`}
               style={{ width: "595pt", height: "842pt" }}
             >
               {/* Professional Header */}
@@ -168,19 +281,59 @@ const MyTemplate2 = () => {
                 <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-700">
                   <div className="flex items-center gap-2">
                     <span className="text-gray-500">📍</span>
-                    <span>{resumeData.location}</span>
+                    {editMode ? (
+                      <input
+                        type="text"
+                        value={localData.location}
+                        onChange={(e) => handleFieldChange("location", e.target.value)}
+                        className="bg-transparent text-gray-700 placeholder-gray-500 border-b border-gray-300 focus:border-blue-500"
+                        placeholder="Location"
+                      />
+                    ) : (
+                      <span>{resumeData.location}</span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-gray-500">📞</span>
-                    <span>{resumeData.phone}</span>
+                    {editMode ? (
+                      <input
+                        type="text"
+                        value={localData.phone}
+                        onChange={(e) => handleFieldChange("phone", e.target.value)}
+                        className="bg-transparent text-gray-700 placeholder-gray-500 border-b border-gray-300 focus:border-blue-500"
+                        placeholder="Phone"
+                      />
+                    ) : (
+                      <span>{resumeData.phone}</span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-gray-500">✉️</span>
-                    <span>{resumeData.email}</span>
+                    {editMode ? (
+                      <input
+                        type="text"
+                        value={localData.email}
+                        onChange={(e) => handleFieldChange("email", e.target.value)}
+                        className="bg-transparent text-gray-700 placeholder-gray-500 border-b border-gray-300 focus:border-blue-500"
+                        placeholder="Email"
+                      />
+                    ) : (
+                      <span>{resumeData.email}</span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-gray-500">🔗</span>
-                    <span>{resumeData.linkedin}</span>
+                    {editMode ? (
+                      <input
+                        type="text"
+                        value={localData.linkedin}
+                        onChange={(e) => handleFieldChange("linkedin", e.target.value)}
+                        className="bg-transparent text-gray-700 placeholder-gray-500 border-b border-gray-300 focus:border-blue-500"
+                        placeholder="LinkedIn"
+                      />
+                    ) : (
+                      <span>{resumeData.linkedin}</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -191,16 +344,43 @@ const MyTemplate2 = () => {
                 <div className="w-1/3 p-6 bg-gray-50 border-r border-gray-200">
                   {/* Skills Section */}
                   <div className="mb-8">
-                    <h3 className={`text-lg font-bold mb-4 ${theme.text} border-b ${theme.border} pb-2`}>
-                      Skills
-                    </h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className={`text-lg font-bold ${theme.text} border-b ${theme.border} pb-2`}>
+                        Skills
+                      </h3>
+                      {editMode && (
+                        <button
+                          onClick={addSkill}
+                          className="text-sm bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+                        >
+                          +
+                        </button>
+                      )}
+                    </div>
                     <div className="space-y-2">
                       {resumeData.skills?.map((skill, idx) => (
-                        <div
-                          key={idx}
-                          className={`px-3 py-2 rounded ${theme.accent} ${theme.text} font-medium text-sm`}
-                        >
-                          {skill}
+                        <div key={idx} className="flex items-center gap-2">
+                          {editMode ? (
+                            <>
+                              <input
+                                type="text"
+                                value={localData.skills[idx] || ""}
+                                onChange={(e) => handleArrayFieldChange("skills", idx, e.target.value)}
+                                className={`flex-1 px-3 py-2 rounded ${theme.accent} ${theme.text} font-medium text-sm border border-transparent focus:border-blue-300`}
+                                placeholder="Skill"
+                              />
+                              <button
+                                onClick={() => removeSkill(idx)}
+                                className="text-red-500 hover:text-red-700 text-sm"
+                              >
+                                ×
+                              </button>
+                            </>
+                          ) : (
+                            <div className={`px-3 py-2 rounded ${theme.accent} ${theme.text} font-medium text-sm`}>
+                              {skill}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -289,9 +469,19 @@ const MyTemplate2 = () => {
 
                   {/* Experience Section */}
                   <div className="mb-8">
-                    <h3 className={`text-lg font-bold mb-6 ${theme.text} border-b ${theme.border} pb-2`}>
-                      Experience
-                    </h3>
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className={`text-lg font-bold ${theme.text} border-b ${theme.border} pb-2`}>
+                        Experience
+                      </h3>
+                      {editMode && (
+                        <button
+                          onClick={addExperience}
+                          className="text-sm bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+                        >
+                          + Add Experience
+                        </button>
+                      )}
+                    </div>
                     <div className="space-y-6">
                       {resumeData.experience.map((exp, idx) => (
                         <div key={idx} className="relative">
@@ -300,6 +490,15 @@ const MyTemplate2 = () => {
                           <div className="pl-6">
                             {editMode ? (
                               <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="font-bold text-gray-900">Experience #{idx + 1}</h4>
+                                  <button
+                                    onClick={() => removeExperience(idx)}
+                                    className="text-red-500 hover:text-red-700 text-sm"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
                                 <input
                                   type="text"
                                   value={localData.experience[idx]?.title || ""}
