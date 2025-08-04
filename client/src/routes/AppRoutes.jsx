@@ -1,7 +1,6 @@
 // src/routes/AppRoutes.jsx
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-
   // Home 
 import Home from "../pages/Home.jsx"
 
@@ -15,7 +14,8 @@ import TemplatePage from '../pages/TemplatePage.jsx';
   // ResumeTemplates
 import Template1 from "../components/ai-resume-templates/Template1.jsx";
 import Template2 from '../components/ai-resume-templates/Template2.jsx';
-
+import MyTemplate1 from '../components/ai-resume-templates/mytemp1.jsx';
+import MyTemplate2 from '../components/ai-resume-templates/Mytemp2.jsx';
 // Not Found
 import NotFound from "../pages/NotFound.jsx";
 
@@ -29,7 +29,8 @@ const AppRoutes = () => {
           <Route  path='/' element={<Home />} />
           <Route  path='/template1' element={<Template1 />} />
           <Route  path='/template2' element={<Template2/>} />
-
+           <Route  path='/template3' element={<MyTemplate1/>} />
+           <Route  path='/template4' element={<MyTemplate2/>} />
           {/* Login and Signup */}
           <Route exact path='/Login' element={<Login/>} />
           <Route exact path='/SignUp' element={<SignUp/>} />
