@@ -361,13 +361,13 @@ export default function MyTemplate1() {
                       )}
                     </div>
                     <div className="space-y-2">
-                      {resumeData.skills?.map((skill, idx) => (
+                      {localData.skills?.map((skill, idx) => (
                         <div key={idx} className="flex items-center gap-2">
                           {editMode ? (
                             <>
                               <input
                                 type="text"
-                                value={localData.skills[idx] || ""}
+                                value={skill || ""}
                                 onChange={(e) => handleArrayFieldChange("skills", idx, e.target.value)}
                                 className={`flex-1 px-3 py-2 rounded-lg ${theme.accent} ${theme.text} font-medium text-sm border border-transparent focus:border-purple-300`}
                                 placeholder="Skill"
@@ -491,7 +491,7 @@ export default function MyTemplate1() {
                       )}
                     </div>
                     <div className="space-y-6">
-                      {resumeData.experience.map((exp, idx) => (
+                      {localData.experience?.map((exp, idx) => (
                         <div key={idx} className="relative">
                           <div className={`absolute left-0 top-0 w-3 h-3 rounded-full ${theme.button} border-2 border-white`}></div>
                           <div className={`absolute left-1.5 top-3 h-full w-0.5 ${theme.accent}`}></div>
@@ -597,20 +597,20 @@ export default function MyTemplate1() {
                   </div>
 
                   {/* Projects Section */}
-                  {resumeData.projects && (
+                  {localData.projects && (
                     <div>
                       <h3 className={`text-xl font-bold mb-6 ${theme.text} flex items-center gap-2`}>
                         <span className="text-2xl">🚀</span>
                         Projects
                       </h3>
                       <div className="space-y-4">
-                        {resumeData.projects.map((proj, idx) => (
+                        {localData.projects.map((proj, idx) => (
                           <div key={idx} className={`p-4 rounded-lg ${theme.card} border ${theme.border} hover:shadow-md transition-shadow`}>
                             {editMode ? (
                               <div className="space-y-2">
                                 <input
                                   type="text"
-                                  value={localData.projects[idx]?.name || ""}
+                                  value={proj.name || ""}
                                   onChange={(e) => {
                                     const updated = [...localData.projects];
                                     if (updated[idx]) {
@@ -622,7 +622,7 @@ export default function MyTemplate1() {
                                   placeholder="Project Name"
                                 />
                                 <textarea
-                                  value={localData.projects[idx]?.description || ""}
+                                  value={proj.description || ""}
                                   onChange={(e) => {
                                     const updated = [...localData.projects];
                                     if (updated[idx]) {
@@ -636,7 +636,7 @@ export default function MyTemplate1() {
                                 />
                                 <input
                                   type="text"
-                                  value={localData.projects[idx]?.link || ""}
+                                  value={proj.link || ""}
                                   onChange={(e) => {
                                     const updated = [...localData.projects];
                                     if (updated[idx]) {
