@@ -14,7 +14,7 @@ import TemplatePage from '../pages/TemplatePage.jsx';
   // ResumeTemplates
 import Template1 from "../components/ai-resume-templates/Template1.jsx";
 import Template2 from '../components/ai-resume-templates/Template2.jsx';
-import MyTemplate1 from '../components/ai-resume-templates/mytemp1.jsx';
+import MyTemplate1 from '../components/ai-resume-templates/Mytemp1.jsx';
 import MyTemplate2 from '../components/ai-resume-templates/Mytemp2.jsx';
 // Not Found
 import NotFound from "../pages/NotFound.jsx";
