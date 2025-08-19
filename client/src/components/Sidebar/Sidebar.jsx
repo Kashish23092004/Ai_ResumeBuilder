@@ -42,21 +42,31 @@ const Sidebar = ({ onEnhance, resumeRef }) => {
       setTimeout(() => {
         html2pdf()
           .set({
-            margin: 0.5,
+            margin: [0.5, 0.5, 0.5, 0.5],
             filename: "My_Resume.pdf",
             image: { type: "jpeg", quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+            html2canvas: { 
+              scale: 2,
+              useCORS: true,
+              allowTaint: true,
+              backgroundColor: '#ffffff',
+              logging: false,
+              width: element.offsetWidth,
+              height: element.offsetHeight,
+              scrollX: 0,
+              scrollY: 0
+            },
+            jsPDF: { unit: "pt", format: "a4", orientation: "portrait" },
           })
           .from(element)
           .save()
           .catch((err) => {
             console.error("❌ PDF Download Error:", err);
-            alert("Something went wrong while generating the PDF.");
+            alert("Something went wrong while generating the PDF. Please try again.");
           });
 
         setDownloadRequested(false);
-      }, 300);
+      }, 500);
     }
   }, [downloadRequested, resumeRef]);
 
