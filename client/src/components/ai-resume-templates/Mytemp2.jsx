@@ -33,6 +33,15 @@ const MyTemplate1 = () => {
   };
 
   const addSkill = () => {
+    // Check if there are any empty skills
+    const currentSkills = localData.skills || [];
+    const hasEmptySkill = currentSkills.some(skill => !skill?.trim());
+    
+    if (hasEmptySkill) {
+      alert("Please fill in all existing skills before adding a new one.");
+      return;
+    }
+    
     setLocalData((prev) => ({
       ...prev,
       skills: [...(prev.skills || []), ""],
@@ -47,6 +56,17 @@ const MyTemplate1 = () => {
   };
 
   const addExperience = () => {
+    // Check if current experiences have required fields filled
+    const currentExperiences = localData.experience || [];
+    const hasEmptyExperience = currentExperiences.some(exp => 
+      !exp.title?.trim() || !exp.companyName?.trim()
+    );
+    
+    if (hasEmptyExperience) {
+      alert("Please fill in the job title and company name for existing experiences before adding a new one.");
+      return;
+    }
+    
     setLocalData((prev) => ({
       ...prev,
       experience: [
@@ -70,6 +90,17 @@ const MyTemplate1 = () => {
   };
 
   const addEducation = () => {
+    // Check if current education entries have required fields filled
+    const currentEducation = localData.education || [];
+    const hasEmptyEducation = currentEducation.some(edu => 
+      !edu.degree?.trim() || !edu.institution?.trim()
+    );
+    
+    if (hasEmptyEducation) {
+      alert("Please fill in the degree and institution for existing education entries before adding a new one.");
+      return;
+    }
+    
     setLocalData((prev) => ({
       ...prev,
       education: [
@@ -92,11 +123,48 @@ const MyTemplate1 = () => {
   };
 
  const handleSave = () => {
+  // Validate required fields before saving
+  const errors = [];
+  
+  // Check for empty required fields
+  if (!localData.name?.trim()) errors.push("Name is required");
+  if (!localData.role?.trim()) errors.push("Role/Title is required");
+  
+  // Check for empty experiences with partial data
+  const experiences = localData.experience || [];
+  experiences.forEach((exp, index) => {
+    if ((exp.title?.trim() || exp.companyName?.trim()) && (!exp.title?.trim() || !exp.companyName?.trim())) {
+      errors.push(`Experience ${index + 1}: Both job title and company name are required`);
+    }
+  });
+  
+  // Check for empty education with partial data
+  const education = localData.education || [];
+  education.forEach((edu, index) => {
+    if ((edu.degree?.trim() || edu.institution?.trim()) && (!edu.degree?.trim() || !edu.institution?.trim())) {
+      errors.push(`Education ${index + 1}: Both degree and institution are required`);
+    }
+  });
+  
+  // Check for empty skills
+  const skills = localData.skills || [];
+  const emptySkillsCount = skills.filter(s => !s?.trim()).length;
+  if (emptySkillsCount > 0) {
+    errors.push(`Please fill in all ${emptySkillsCount} empty skill(s) or remove them`);
+  }
+  
+  if (errors.length > 0) {
+    alert("Please fix the following issues:\n\n" + errors.join("\n"));
+    return;
+  }
+  
   setResumeData({
     ...localData,
     skills: (localData.skills || []).filter(s => s && s.trim()),
     languages: (localData.languages || []).filter(l => l && l.trim()),
     interests: (localData.interests || []).filter(i => i && i.trim()),
+    experience: (localData.experience || []).filter(exp => exp.title?.trim() && exp.companyName?.trim()),
+    education: (localData.education || []).filter(edu => edu.degree?.trim() && edu.institution?.trim()),
   });
   setEditMode(false);
 };
@@ -129,15 +197,19 @@ const MyTemplate1 = () => {
                           type="text"
                           value={localData.name}
                           onChange={(e) => handleFieldChange("name", e.target.value)}
-                          className="text-3xl font-bold bg-transparent placeholder-white w-full mb-1 border-b border-white"
-                          placeholder="Your Name"
+                          className={`text-3xl font-bold bg-transparent placeholder-white w-full mb-1 border-b ${
+                            !localData.name?.trim() ? 'border-red-400' : 'border-white'
+                          }`}
+                          placeholder="Your Name *"
                         />
                         <input
                           type="text"
                           value={localData.role}
                           onChange={(e) => handleFieldChange("role", e.target.value)}
-                          className="text-lg bg-transparent placeholder-white w-full border-b border-white"
-                          placeholder="Your Title"
+                          className={`text-lg bg-transparent placeholder-white w-full border-b ${
+                            !localData.role?.trim() ? 'border-red-400' : 'border-white'
+                          }`}
+                          placeholder="Your Title *"
                         />
                       </>
                     ) : (
@@ -201,8 +273,10 @@ const MyTemplate1 = () => {
                             onChange={(e) =>
                               handleArrayFieldChange("skills", idx, e.target.value)
                             }
-                            className="flex-grow p-2 border rounded"
-                            placeholder="Skill"
+                            className={`flex-grow p-2 border rounded ${
+                              !skill?.trim() ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                            }`}
+                            placeholder="Skill *"
                           />
                           <button
                             onClick={() => removeSkill(idx)}
@@ -262,8 +336,10 @@ const MyTemplate1 = () => {
                               updated[idx].title = e.target.value;
                               handleFieldChange("experience", updated);
                             }}
-                            className="w-full p-2 border rounded"
-                            placeholder="Job Title"
+                            className={`w-full p-2 border rounded ${
+                              !exp.title?.trim() ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                            }`}
+                            placeholder="Job Title *"
                           />
                           <input
                             type="text"
@@ -273,8 +349,10 @@ const MyTemplate1 = () => {
                               updated[idx].companyName = e.target.value;
                               handleFieldChange("experience", updated);
                             }}
-                            className="w-full p-2 border rounded"
-                            placeholder="Company Name"
+                            className={`w-full p-2 border rounded ${
+                              !exp.companyName?.trim() ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                            }`}
+                            placeholder="Company Name *"
                           />
                           <div className="flex gap-2">
                             <input
@@ -367,8 +445,10 @@ const MyTemplate1 = () => {
                               updated[idx].degree = e.target.value;
                               handleFieldChange("education", updated);
                             }}
-                            className="w-full p-2 border rounded"
-                            placeholder="Degree"
+                            className={`w-full p-2 border rounded ${
+                              !edu.degree?.trim() ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                            }`}
+                            placeholder="Degree *"
                           />
                           <input
                             type="text"
@@ -378,8 +458,10 @@ const MyTemplate1 = () => {
                               updated[idx].institution = e.target.value;
                               handleFieldChange("education", updated);
                             }}
-                            className="w-full p-2 border rounded"
-                            placeholder="Institution"
+                            className={`w-full p-2 border rounded ${
+                              !edu.institution?.trim() ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                            }`}
+                            placeholder="Institution *"
                           />
                           <div className="flex gap-2">
                             <input

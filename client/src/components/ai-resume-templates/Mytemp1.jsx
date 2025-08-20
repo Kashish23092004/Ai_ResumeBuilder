@@ -41,6 +41,17 @@ const MyTemplate1 = () => {
   };
 
   const addExperience = () => {
+    // Check if current experiences have required fields filled
+    const currentExperiences = localData.experience || [];
+    const hasEmptyExperience = currentExperiences.some(exp => 
+      !exp.title?.trim() || !exp.companyName?.trim()
+    );
+    
+    if (hasEmptyExperience) {
+      alert("Please fill in the job title and company name for existing experiences before adding a new one.");
+      return;
+    }
+    
     setLocalData((prev) => ({
       ...prev,
       experience: [
@@ -64,6 +75,15 @@ const MyTemplate1 = () => {
   };
 
   const addSkill = () => {
+    // Check if there are any empty skills
+    const currentSkills = localData.skills || [];
+    const hasEmptySkill = currentSkills.some(skill => !skill?.trim());
+    
+    if (hasEmptySkill) {
+      alert("Please fill in all existing skills before adding a new one.");
+      return;
+    }
+    
     setLocalData((prev) => ({
       ...prev,
       skills: [...(prev.skills || []), ""]
@@ -77,6 +97,15 @@ const MyTemplate1 = () => {
     }));
   };
 const addLanguage = () => {
+  // Check if there are any empty languages
+  const currentLanguages = localData.languages || [];
+  const hasEmptyLanguage = currentLanguages.some(lang => !lang?.trim());
+  
+  if (hasEmptyLanguage) {
+    alert("Please fill in all existing languages before adding a new one.");
+    return;
+  }
+  
   setLocalData((prev) => ({
     ...prev,
     languages: [...(prev.languages || []), ""],
@@ -91,6 +120,15 @@ const removeLanguage = (index) => {
 };
 
 const addInterest = () => {
+  // Check if there are any empty interests
+  const currentInterests = localData.interests || [];
+  const hasEmptyInterest = currentInterests.some(interest => !interest?.trim());
+  
+  if (hasEmptyInterest) {
+    alert("Please fill in all existing interests before adding a new one.");
+    return;
+  }
+  
   setLocalData((prev) => ({
     ...prev,
     interests: [...(prev.interests || []), ""],
@@ -104,11 +142,53 @@ const removeInterest = (index) => {
   }));
 };
 const handleSave = () => {
+  // Validate required fields before saving
+  const errors = [];
+  
+  // Check for empty required fields
+  if (!localData.name?.trim()) errors.push("Name is required");
+  if (!localData.role?.trim()) errors.push("Role/Title is required");
+  
+  // Check for empty experiences with partial data
+  const experiences = localData.experience || [];
+  experiences.forEach((exp, index) => {
+    if ((exp.title?.trim() || exp.companyName?.trim()) && (!exp.title?.trim() || !exp.companyName?.trim())) {
+      errors.push(`Experience ${index + 1}: Both job title and company name are required`);
+    }
+  });
+  
+  // Check for empty skills
+  const skills = localData.skills || [];
+  const emptySkillsCount = skills.filter(s => !s?.trim()).length;
+  if (emptySkillsCount > 0) {
+    errors.push(`Please fill in all ${emptySkillsCount} empty skill(s) or remove them`);
+  }
+  
+  // Check for empty languages
+  const languages = localData.languages || [];
+  const emptyLanguagesCount = languages.filter(l => !l?.trim()).length;
+  if (emptyLanguagesCount > 0) {
+    errors.push(`Please fill in all ${emptyLanguagesCount} empty language(s) or remove them`);
+  }
+  
+  // Check for empty interests
+  const interests = localData.interests || [];
+  const emptyInterestsCount = interests.filter(i => !i?.trim()).length;
+  if (emptyInterestsCount > 0) {
+    errors.push(`Please fill in all ${emptyInterestsCount} empty interest(s) or remove them`);
+  }
+  
+  if (errors.length > 0) {
+    alert("Please fix the following issues:\n\n" + errors.join("\n"));
+    return;
+  }
+  
   setResumeData({
     ...localData,
     skills: (localData.skills || []).filter(s => s && s.trim()),
     languages: (localData.languages || []).filter(l => l && l.trim()),
     interests: (localData.interests || []).filter(i => i && i.trim()),
+    experience: (localData.experience || []).filter(exp => exp.title?.trim() && exp.companyName?.trim()),
   });
   setEditMode(false);
 };
@@ -145,15 +225,19 @@ const handleSave = () => {
                         type="text"
                         value={localData.name}
                         onChange={(e) => handleFieldChange("name", e.target.value)}
-                        className="text-3xl font-bold bg-transparent text-white placeholder-white placeholder-opacity-80 w-full mb-2 text-center border-b border-white border-opacity-30 focus:border-opacity-100"
-                        placeholder="Your Name"
+                        className={`text-3xl font-bold bg-transparent text-white placeholder-white placeholder-opacity-80 w-full mb-2 text-center border-b focus:border-opacity-100 ${
+                          !localData.name?.trim() ? 'border-red-400 border-opacity-80' : 'border-white border-opacity-30'
+                        }`}
+                        placeholder="Your Name *"
                       />
                       <input
                         type="text"
                         value={localData.role}
                         onChange={(e) => handleFieldChange("role", e.target.value)}
-                        className="text-lg bg-transparent text-white placeholder-white placeholder-opacity-80 w-full text-center border-b border-white border-opacity-30 focus:border-opacity-100"
-                        placeholder="Your Title"
+                        className={`text-lg bg-transparent text-white placeholder-white placeholder-opacity-80 w-full text-center border-b focus:border-opacity-100 ${
+                          !localData.role?.trim() ? 'border-red-400 border-opacity-80' : 'border-white border-opacity-30'
+                        }`}
+                        placeholder="Your Title *"
                       />
                     </>
                   ) : (
@@ -256,8 +340,10 @@ const handleSave = () => {
                                   type="text"
                                   value={skill || ""}
                                   onChange={(e) => handleArrayFieldChange("skills", idx, e.target.value)}
-                                  className={`flex-1 px-3 py-2 rounded ${theme.accent} ${theme.text} font-medium text-sm border border-transparent focus:border-blue-300`}
-                                  placeholder="Skill"
+                                  className={`flex-1 px-3 py-2 rounded font-medium text-sm border focus:border-blue-300 ${
+                                    !skill?.trim() ? 'border-red-300 bg-red-50 text-red-900' : `${theme.accent} ${theme.text} border-transparent`
+                                  }`}
+                                  placeholder="Skill *"
                                 />
                                 <button
                                   onClick={() => removeSkill(idx)}
@@ -326,8 +412,10 @@ const handleSave = () => {
                 type="text"
                 value={lang || ""}
                 onChange={(e) => handleArrayFieldChange("languages", idx, e.target.value)}
-                className={`flex-1 px-3 py-2 rounded ${theme.accent} ${theme.text} font-medium text-sm border border-transparent focus:border-blue-300`}
-                placeholder="Language"
+                className={`flex-1 px-3 py-2 rounded font-medium text-sm border focus:border-blue-300 ${
+                  !lang?.trim() ? 'border-red-300 bg-red-50 text-red-900' : `${theme.accent} ${theme.text} border-transparent`
+                }`}
+                placeholder="Language *"
               />
               <button
                 onClick={() => removeLanguage(idx)}
@@ -375,8 +463,10 @@ const handleSave = () => {
                 type="text"
                 value={interest || ""}
                 onChange={(e) => handleArrayFieldChange("interests", idx, e.target.value)}
-                className={`flex-1 px-3 py-2 rounded ${theme.accent} ${theme.text} font-medium text-sm border border-transparent focus:border-blue-300`}
-                placeholder="Interest"
+                className={`flex-1 px-3 py-2 rounded font-medium text-sm border focus:border-blue-300 ${
+                  !interest?.trim() ? 'border-red-300 bg-red-50 text-red-900' : `${theme.accent} ${theme.text} border-transparent`
+                }`}
+                placeholder="Interest *"
               />
               <button
                 onClick={() => removeInterest(idx)}
@@ -464,8 +554,10 @@ const handleSave = () => {
                                         handleFieldChange("experience", updated);
                                       }
                                     }}
-                                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Job Title"
+                                    className={`w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 ${
+                                      !localData.experience[idx]?.title?.trim() ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                    }`}
+                                    placeholder="Job Title *"
                                   />
                                   <input
                                     type="text"
@@ -477,8 +569,10 @@ const handleSave = () => {
                                         handleFieldChange("experience", updated);
                                       }
                                     }}
-                                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Company Name"
+                                    className={`w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 ${
+                                      !localData.experience[idx]?.companyName?.trim() ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                    }`}
+                                    placeholder="Company Name *"
                                   />
                                   <div className="flex gap-2">
                                     <input
