@@ -3,7 +3,7 @@ import Sidebar from "../Sidebar/Sidebar";
 import Navbar from "../Navbar/Navbar";
 import { useResume } from "../../context/ResumeContext";
 
-const MyTemplate1 = () => {
+const MyTemplate2 = () => {
   const resumeRef = useRef(null);
   const { resumeData, setResumeData } = useResume();
   const [editMode, setEditMode] = useState(false);
@@ -13,11 +13,18 @@ const MyTemplate1 = () => {
     setLocalData(resumeData);
   }, [resumeData]);
 
+  // Use hex colors instead of Tailwind classes for PDF compatibility
   const theme = {
-    header: "bg-blue-600",
-    text: "text-blue-900",
-    button: "bg-blue-600 hover:bg-blue-700",
-    accent: "bg-blue-50",
+    header: "#2563eb", // blue-600
+    headerHover: "#1d4ed8", // blue-700
+    text: "#1e3a8a", // blue-900
+    accent: "#eff6ff", // blue-50
+    success: "#059669", // green-600
+    successHover: "#047857", // green-700
+    danger: "#dc2626", // red-600
+    dangerHover: "#b91c1c", // red-700
+    gray: "#6b7280", // gray-500
+    grayHover: "#4b5563", // gray-600
   };
 
   const handleFieldChange = (field, value) => {
@@ -33,7 +40,6 @@ const MyTemplate1 = () => {
   };
 
   const addSkill = () => {
-    // Check if there are any empty skills
     const currentSkills = localData.skills || [];
     const hasEmptySkill = currentSkills.some(skill => !skill?.trim());
     
@@ -56,7 +62,6 @@ const MyTemplate1 = () => {
   };
 
   const addExperience = () => {
-    // Check if current experiences have required fields filled
     const currentExperiences = localData.experience || [];
     const hasEmptyExperience = currentExperiences.some(exp => 
       !exp.title?.trim() || !exp.companyName?.trim()
@@ -90,7 +95,6 @@ const MyTemplate1 = () => {
   };
 
   const addEducation = () => {
-    // Check if current education entries have required fields filled
     const currentEducation = localData.education || [];
     const hasEmptyEducation = currentEducation.some(edu => 
       !edu.degree?.trim() || !edu.institution?.trim()
@@ -122,105 +126,214 @@ const MyTemplate1 = () => {
     }));
   };
 
- const handleSave = () => {
-  // Validate required fields before saving
-  const errors = [];
-  
-  // Check for empty required fields
-  if (!localData.name?.trim()) errors.push("Name is required");
-  if (!localData.role?.trim()) errors.push("Role/Title is required");
-  
-  // Check for empty experiences with partial data
-  const experiences = localData.experience || [];
-  experiences.forEach((exp, index) => {
-    if ((exp.title?.trim() || exp.companyName?.trim()) && (!exp.title?.trim() || !exp.companyName?.trim())) {
-      errors.push(`Experience ${index + 1}: Both job title and company name are required`);
+  const handleSave = () => {
+    const errors = [];
+    
+    if (!localData.name?.trim()) errors.push("Name is required");
+    if (!localData.role?.trim()) errors.push("Role/Title is required");
+    
+    const experiences = localData.experience || [];
+    experiences.forEach((exp, index) => {
+      if ((exp.title?.trim() || exp.companyName?.trim()) && (!exp.title?.trim() || !exp.companyName?.trim())) {
+        errors.push(`Experience ${index + 1}: Both job title and company name are required`);
+      }
+    });
+    
+    const education = localData.education || [];
+    education.forEach((edu, index) => {
+      if ((edu.degree?.trim() || edu.institution?.trim()) && (!edu.degree?.trim() || !edu.institution?.trim())) {
+        errors.push(`Education ${index + 1}: Both degree and institution are required`);
+      }
+    });
+    
+    const skills = localData.skills || [];
+    const emptySkillsCount = skills.filter(s => !s?.trim()).length;
+    if (emptySkillsCount > 0) {
+      errors.push(`Please fill in all ${emptySkillsCount} empty skill(s) or remove them`);
     }
-  });
-  
-  // Check for empty education with partial data
-  const education = localData.education || [];
-  education.forEach((edu, index) => {
-    if ((edu.degree?.trim() || edu.institution?.trim()) && (!edu.degree?.trim() || !edu.institution?.trim())) {
-      errors.push(`Education ${index + 1}: Both degree and institution are required`);
+    
+    if (errors.length > 0) {
+      alert("Please fix the following issues:\n\n" + errors.join("\n"));
+      return;
     }
-  });
-  
-  // Check for empty skills
-  const skills = localData.skills || [];
-  const emptySkillsCount = skills.filter(s => !s?.trim()).length;
-  if (emptySkillsCount > 0) {
-    errors.push(`Please fill in all ${emptySkillsCount} empty skill(s) or remove them`);
-  }
-  
-  if (errors.length > 0) {
-    alert("Please fix the following issues:\n\n" + errors.join("\n"));
-    return;
-  }
-  
-  setResumeData({
-    ...localData,
-    skills: (localData.skills || []).filter(s => s && s.trim()),
-    languages: (localData.languages || []).filter(l => l && l.trim()),
-    interests: (localData.interests || []).filter(i => i && i.trim()),
-    experience: (localData.experience || []).filter(exp => exp.title?.trim() && exp.companyName?.trim()),
-    education: (localData.education || []).filter(edu => edu.degree?.trim() && edu.institution?.trim()),
-  });
-  setEditMode(false);
-};
-
+    
+    setResumeData({
+      ...localData,
+      skills: (localData.skills || []).filter(s => s && s.trim()),
+      languages: (localData.languages || []).filter(l => l && l.trim()),
+      interests: (localData.interests || []).filter(i => i && i.trim()),
+      experience: (localData.experience || []).filter(exp => exp.title?.trim() && exp.companyName?.trim()),
+      education: (localData.education || []).filter(edu => edu.degree?.trim() && edu.institution?.trim()),
+    });
+    setEditMode(false);
+  };
 
   const handleCancel = () => {
     setLocalData(resumeData);
     setEditMode(false);
   };
 
+  // Inline styles for PDF compatibility
+  const styles = {
+    container: {
+      minHeight: '100vh',
+      backgroundColor: '#f9fafb'
+    },
+    resumeContainer: {
+      width: '900px',
+      backgroundColor: 'white',
+      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+      border: '2px solid #d1d5db',
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+      minHeight: '600px'
+    },
+    header: {
+      backgroundColor: theme.header,
+      padding: '1.5rem',
+      color: 'white'
+    },
+    headerInput: {
+      backgroundColor: 'transparent',
+      color: 'white',
+      border: 'none',
+      borderBottom: '1px solid white',
+      outline: 'none',
+      width: '100%'
+    },
+    headerInputError: {
+      backgroundColor: 'transparent',
+      color: 'white',
+      border: 'none',
+      borderBottom: '1px solid #fca5a5',
+      outline: 'none',
+      width: '100%'
+    },
+    mainContent: {
+      padding: '2rem',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '2rem'
+    },
+    sectionTitle: {
+      fontWeight: 'bold',
+      fontSize: '1.125rem',
+      marginBottom: '0.5rem'
+    },
+    addButton: {
+      padding: '0.25rem 1rem',
+      backgroundColor: theme.success,
+      color: 'white',
+      border: 'none',
+      borderRadius: '0.25rem',
+      cursor: 'pointer',
+      fontSize: '0.875rem'
+    },
+    input: {
+      padding: '0.5rem',
+      border: '1px solid #d1d5db',
+      borderRadius: '0.25rem',
+      width: '100%'
+    },
+    inputError: {
+      padding: '0.5rem',
+      border: '1px solid #fca5a5',
+      borderRadius: '0.25rem',
+      backgroundColor: '#fef2f2',
+      width: '100%'
+    },
+    textarea: {
+      padding: '0.5rem',
+      border: '1px solid #d1d5db',
+      borderRadius: '0.25rem',
+      width: '100%',
+      resize: 'none'
+    },
+    removeButton: {
+      color: theme.danger,
+      backgroundColor: 'transparent',
+      border: 'none',
+      cursor: 'pointer',
+      fontWeight: 'bold'
+    },
+    saveButton: {
+      padding: '0.75rem 1.5rem',
+      borderRadius: '0.5rem',
+      color: 'white',
+      backgroundColor: theme.header,
+      border: 'none',
+      cursor: 'pointer',
+      fontWeight: '500',
+      margin: '0 0.5rem'
+    },
+    cancelButton: {
+      padding: '0.75rem 1.5rem',
+      borderRadius: '0.5rem',
+      color: 'white',
+      backgroundColor: theme.gray,
+      border: 'none',
+      cursor: 'pointer',
+      fontWeight: '500',
+      margin: '0 0.5rem'
+    },
+    editButton: {
+      padding: '0.75rem 1.5rem',
+      borderRadius: '0.5rem',
+      color: 'white',
+      backgroundColor: theme.header,
+      border: 'none',
+      cursor: 'pointer',
+      fontWeight: '500'
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div style={styles.container}>
       <Navbar />
-      <div className="flex">
+      <div style={{ display: 'flex' }}>
         <Sidebar resumeRef={resumeRef} />
-        <div className="flex-1 p-8">
-          <div className="flex justify-center">
-            <div
-              ref={resumeRef}
-              className="w-[900px] bg-white shadow-lg border-2 border-gray-300 font-sans"
-              style={{ width: "900px", minHeight: "600px" }}
-            >
+        <div style={{ flex: 1, padding: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <div ref={resumeRef} style={styles.resumeContainer}>
               {/* Header */}
-              <div className={`${theme.header} p-6 text-white`}>
-                <div className="flex flex-col md:flex-row md:items-center justify-between">
-                  <div className="flex flex-col space-y-2 w-full md:w-auto">
+              <div style={styles.header}>
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
                     {editMode ? (
                       <>
                         <input
                           type="text"
                           value={localData.name}
                           onChange={(e) => handleFieldChange("name", e.target.value)}
-                          className={`text-3xl font-bold bg-transparent placeholder-white w-full mb-1 border-b ${
-                            !localData.name?.trim() ? 'border-red-400' : 'border-white'
-                          }`}
+                          style={{
+                            ...(!localData.name?.trim() ? styles.headerInputError : styles.headerInput),
+                            fontSize: '1.875rem',
+                            fontWeight: 'bold',
+                            marginBottom: '0.25rem'
+                          }}
                           placeholder="Your Name *"
                         />
                         <input
                           type="text"
                           value={localData.role}
                           onChange={(e) => handleFieldChange("role", e.target.value)}
-                          className={`text-lg bg-transparent placeholder-white w-full border-b ${
-                            !localData.role?.trim() ? 'border-red-400' : 'border-white'
-                          }`}
+                          style={{
+                            ...(!localData.role?.trim() ? styles.headerInputError : styles.headerInput),
+                            fontSize: '1.125rem'
+                          }}
                           placeholder="Your Title *"
                         />
                       </>
                     ) : (
                       <>
-                        <h1 className="text-3xl font-bold mb-1">{resumeData.name}</h1>
-                        <p className="text-lg">{resumeData.role}</p>
+                        <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', margin: '0 0 0.25rem 0' }}>
+                          {resumeData.name}
+                        </h1>
+                        <p style={{ fontSize: '1.125rem', margin: 0 }}>{resumeData.role}</p>
                       </>
                     )}
                   </div>
 
-                  <div className="flex flex-col md:items-end space-y-1 mt-4 md:mt-0 text-right text-sm">
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem', fontSize: '0.875rem' }}>
                     {["location", "phone", "email", "linkedin"].map((field) =>
                       editMode ? (
                         <input
@@ -228,14 +341,18 @@ const MyTemplate1 = () => {
                           type="text"
                           value={localData[field] || ""}
                           onChange={(e) => handleFieldChange(field, e.target.value)}
-                          className="bg-transparent border-b border-white placeholder-white mb-1"
+                          style={{
+                            ...styles.headerInput,
+                            textAlign: 'right',
+                            marginBottom: '0.25rem'
+                          }}
                           placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
                         />
                       ) : field === "linkedin" ? (
                         <a
                           key={field}
                           href={resumeData.linkedin}
-                          className="underline"
+                          style={{ color: 'white', textDecoration: 'underline' }}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
@@ -248,17 +365,15 @@ const MyTemplate1 = () => {
                   </div>
                 </div>
               </div>
+
               {/* Main Content */}
-              <div className="p-8 space-y-8">
+              <div style={styles.mainContent}>
                 {/* Skills Section */}
                 <section>
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-bold text-lg">Skills</h3>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <h3 style={styles.sectionTitle}>Skills</h3>
                     {editMode && (
-                      <button
-                        onClick={addSkill}
-                        className="px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                      >
+                      <button onClick={addSkill} style={styles.addButton}>
                         + Add Skill
                       </button>
                     )}
@@ -266,21 +381,17 @@ const MyTemplate1 = () => {
                   {editMode ? (
                     <>
                       {localData.skills?.map((skill, idx) => (
-                        <div key={idx} className="flex gap-2 mb-2 items-center">
+                        <div key={idx} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' }}>
                           <input
                             type="text"
                             value={skill}
-                            onChange={(e) =>
-                              handleArrayFieldChange("skills", idx, e.target.value)
-                            }
-                            className={`flex-grow p-2 border rounded ${
-                              !skill?.trim() ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                            }`}
+                            onChange={(e) => handleArrayFieldChange("skills", idx, e.target.value)}
+                            style={!skill?.trim() ? styles.inputError : styles.input}
                             placeholder="Skill *"
                           />
                           <button
                             onClick={() => removeSkill(idx)}
-                            className="text-red-600 font-bold px-2"
+                            style={styles.removeButton}
                             aria-label="Remove skill"
                           >
                             ×
@@ -289,37 +400,36 @@ const MyTemplate1 = () => {
                       ))}
                     </>
                   ) : (
-                    <ul className="list-disc list-inside">
+                    <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem' }}>
                       {resumeData.skills?.map((skill, idx) => (
                         <li key={idx}>{skill}</li>
                       ))}
                     </ul>
                   )}
                 </section>
+
                 {/* Summary Section */}
                 <section>
-                  <h3 className="font-bold text-lg mb-2">Summary</h3>
+                  <h3 style={styles.sectionTitle}>Summary</h3>
                   {editMode ? (
                     <textarea
                       value={localData.summary || ""}
                       onChange={(e) => handleFieldChange("summary", e.target.value)}
                       rows={4}
-                      className="w-full p-2 border rounded resize-none"
+                      style={styles.textarea}
                       placeholder="Enter your professional summary..."
                     />
                   ) : (
                     <p>{resumeData.summary}</p>
                   )}
                 </section>
+
                 {/* Experience Section */}
                 <section>
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-bold text-lg">Experience</h3>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <h3 style={styles.sectionTitle}>Experience</h3>
                     {editMode && (
-                      <button
-                        onClick={addExperience}
-                        className="px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                      >
+                      <button onClick={addExperience} style={styles.addButton}>
                         + Add Experience
                       </button>
                     )}
@@ -327,90 +437,83 @@ const MyTemplate1 = () => {
                   {editMode ? (
                     <>
                       {localData.experience?.map((exp, idx) => (
-                        <div key={idx} className="mb-4 p-4 border rounded space-y-2">
-                          <input
-                            type="text"
-                            value={exp.title || ""}
-                            onChange={(e) => {
-                              const updated = [...localData.experience];
-                              updated[idx].title = e.target.value;
-                              handleFieldChange("experience", updated);
-                            }}
-                            className={`w-full p-2 border rounded ${
-                              !exp.title?.trim() ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                            }`}
-                            placeholder="Job Title *"
-                          />
-                          <input
-                            type="text"
-                            value={exp.companyName || ""}
-                            onChange={(e) => {
-                              const updated = [...localData.experience];
-                              updated[idx].companyName = e.target.value;
-                              handleFieldChange("experience", updated);
-                            }}
-                            className={`w-full p-2 border rounded ${
-                              !exp.companyName?.trim() ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                            }`}
-                            placeholder="Company Name *"
-                          />
-                          <div className="flex gap-2">
+                        <div key={idx} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #d1d5db', borderRadius: '0.25rem' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                             <input
                               type="text"
-                              value={exp.date || ""}
+                              value={exp.title || ""}
                               onChange={(e) => {
                                 const updated = [...localData.experience];
-                                updated[idx].date = e.target.value;
+                                updated[idx].title = e.target.value;
                                 handleFieldChange("experience", updated);
                               }}
-                              className="flex-1 p-2 border rounded"
-                              placeholder="Date"
+                              style={!exp.title?.trim() ? styles.inputError : styles.input}
+                              placeholder="Job Title *"
                             />
                             <input
                               type="text"
-                              value={exp.companyLocation || ""}
+                              value={exp.companyName || ""}
                               onChange={(e) => {
                                 const updated = [...localData.experience];
-                                updated[idx].companyLocation = e.target.value;
+                                updated[idx].companyName = e.target.value;
                                 handleFieldChange("experience", updated);
                               }}
-                              className="flex-1 p-2 border rounded"
-                              placeholder="Location"
+                              style={!exp.companyName?.trim() ? styles.inputError : styles.input}
+                              placeholder="Company Name *"
                             />
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <input
+                                type="text"
+                                value={exp.date || ""}
+                                onChange={(e) => {
+                                  const updated = [...localData.experience];
+                                  updated[idx].date = e.target.value;
+                                  handleFieldChange("experience", updated);
+                                }}
+                                style={{ ...styles.input, flex: 1 }}
+                                placeholder="Date"
+                              />
+                              <input
+                                type="text"
+                                value={exp.companyLocation || ""}
+                                onChange={(e) => {
+                                  const updated = [...localData.experience];
+                                  updated[idx].companyLocation = e.target.value;
+                                  handleFieldChange("experience", updated);
+                                }}
+                                style={{ ...styles.input, flex: 1 }}
+                                placeholder="Location"
+                              />
+                            </div>
+                            <textarea
+                              rows={3}
+                              value={(exp.accomplishment || []).join("\n")}
+                              onChange={(e) => {
+                                const updated = [...localData.experience];
+                                updated[idx].accomplishment = e.target.value.split("\n").filter(Boolean);
+                                handleFieldChange("experience", updated);
+                              }}
+                              style={styles.textarea}
+                              placeholder="Accomplishments (one per line)"
+                            />
+                            <button onClick={() => removeExperience(idx)} style={styles.removeButton}>
+                              Remove Experience
+                            </button>
                           </div>
-                          <textarea
-                            rows={3}
-                            value={(exp.accomplishment || []).join("\n")}
-                            onChange={(e) => {
-                              const updated = [...localData.experience];
-                              updated[idx].accomplishment = e.target.value
-                                .split("\n")
-                                .filter(Boolean);
-                              handleFieldChange("experience", updated);
-                            }}
-                            className="w-full p-2 border rounded resize-none"
-                            placeholder="Accomplishments (one per line)"
-                          />
-                          <button
-                            onClick={() => removeExperience(idx)}
-                            className="text-red-600 hover:text-red-800 font-bold"
-                          >
-                            Remove Experience
-                          </button>
                         </div>
                       ))}
                     </>
                   ) : (
                     <>
                       {resumeData.experience?.map((exp, idx) => (
-                        <div key={idx} className="mb-4">
-                          <div className="font-bold">
+                        <div key={idx} style={{ marginBottom: '1rem' }}>
+                          <div style={{ fontWeight: 'bold' }}>
                             {exp.title} at {exp.companyName}
                           </div>
-                          <div className="text-sm text-gray-600">
+                          <div style={{ fontSize: '0.875rem', color: '#4b5563' }}>
                             {exp.date} | {exp.companyLocation}
                           </div>
-                          <ul className="list-disc list-inside">
+                          <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem' }}>
                             {exp.accomplishment?.map((a, i) => (
                               <li key={i}>{a}</li>
                             ))}
@@ -420,15 +523,13 @@ const MyTemplate1 = () => {
                     </>
                   )}
                 </section>
+
                 {/* Education Section */}
                 <section>
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-bold text-lg">Education</h3>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <h3 style={styles.sectionTitle}>Education</h3>
                     {editMode && (
-                      <button
-                        onClick={addEducation}
-                        className="px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                      >
+                      <button onClick={addEducation} style={styles.addButton}>
                         + Add Education
                       </button>
                     )}
@@ -436,107 +537,93 @@ const MyTemplate1 = () => {
                   {editMode ? (
                     <>
                       {localData.education?.map((edu, idx) => (
-                        <div key={idx} className="mb-4 p-4 border rounded space-y-2">
-                          <input
-                            type="text"
-                            value={edu.degree || ""}
-                            onChange={(e) => {
-                              const updated = [...localData.education];
-                              updated[idx].degree = e.target.value;
-                              handleFieldChange("education", updated);
-                            }}
-                            className={`w-full p-2 border rounded ${
-                              !edu.degree?.trim() ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                            }`}
-                            placeholder="Degree *"
-                          />
-                          <input
-                            type="text"
-                            value={edu.institution || ""}
-                            onChange={(e) => {
-                              const updated = [...localData.education];
-                              updated[idx].institution = e.target.value;
-                              handleFieldChange("education", updated);
-                            }}
-                            className={`w-full p-2 border rounded ${
-                              !edu.institution?.trim() ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                            }`}
-                            placeholder="Institution *"
-                          />
-                          <div className="flex gap-2">
+                        <div key={idx} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #d1d5db', borderRadius: '0.25rem' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                             <input
                               type="text"
-                              value={edu.duration || ""}
+                              value={edu.degree || ""}
                               onChange={(e) => {
                                 const updated = [...localData.education];
-                                updated[idx].duration = e.target.value;
+                                updated[idx].degree = e.target.value;
                                 handleFieldChange("education", updated);
                               }}
-                              className="flex-1 p-2 border rounded"
-                              placeholder="Duration"
+                              style={!edu.degree?.trim() ? styles.inputError : styles.input}
+                              placeholder="Degree *"
                             />
                             <input
                               type="text"
-                              value={edu.location || ""}
+                              value={edu.institution || ""}
                               onChange={(e) => {
                                 const updated = [...localData.education];
-                                updated[idx].location = e.target.value;
+                                updated[idx].institution = e.target.value;
                                 handleFieldChange("education", updated);
                               }}
-                              className="flex-1 p-2 border rounded"
-                              placeholder="Location"
+                              style={!edu.institution?.trim() ? styles.inputError : styles.input}
+                              placeholder="Institution *"
                             />
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <input
+                                type="text"
+                                value={edu.duration || ""}
+                                onChange={(e) => {
+                                  const updated = [...localData.education];
+                                  updated[idx].duration = e.target.value;
+                                  handleFieldChange("education", updated);
+                                }}
+                                style={{ ...styles.input, flex: 1 }}
+                                placeholder="Duration"
+                              />
+                              <input
+                                type="text"
+                                value={edu.location || ""}
+                                onChange={(e) => {
+                                  const updated = [...localData.education];
+                                  updated[idx].location = e.target.value;
+                                  handleFieldChange("education", updated);
+                                }}
+                                style={{ ...styles.input, flex: 1 }}
+                                placeholder="Location"
+                              />
+                            </div>
+                            <button onClick={() => removeEducation(idx)} style={styles.removeButton}>
+                              Remove Education
+                            </button>
                           </div>
-                          <button
-                            onClick={() => removeEducation(idx)}
-                            className="text-red-600 hover:text-red-800 font-bold"
-                          >
-                            Remove Education
-                          </button>
                         </div>
                       ))}
                     </>
                   ) : (
                     <>
                       {resumeData.education?.map((edu, idx) => (
-                        <div key={idx} className="mb-4">
-                          <div className="font-bold">{edu.degree}</div>
+                        <div key={idx} style={{ marginBottom: '1rem' }}>
+                          <div style={{ fontWeight: 'bold' }}>{edu.degree}</div>
                           <div>{edu.institution} ({edu.duration})</div>
-                          <div className="text-sm text-gray-600">{edu.location}</div>
+                          <div style={{ fontSize: '0.875rem', color: '#4b5563' }}>{edu.location}</div>
                         </div>
                       ))}
                     </>
                   )}
                 </section>
               </div>
-
-              {/* Action Buttons */}
-              <div className="w-full flex justify-center my-8">
-                {editMode ? (
-                  <>
-                    <button
-                      onClick={handleSave}
-                      className="px-6 py-3 rounded-lg text-white font-medium transition-all bg-blue-600 hover:bg-blue-700 mx-2"
-                    >
-                      💾 Save Changes
-                    </button>
-                    <button
-                      onClick={handleCancel}
-                      className="px-6 py-3 rounded-lg bg-gray-500 text-white font-medium hover:bg-gray-600 mx-2"
-                    >
-                      ❌ Cancel
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => setEditMode(true)}
-                    className="px-6 py-3 rounded-lg text-white font-medium transition-all bg-blue-600 hover:bg-blue-700"
-                  >
-                    ✏️ Edit Resume
-                  </button>
-                )}
-              </div>
             </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', margin: '2rem 0' }}>
+            {editMode ? (
+              <>
+                <button onClick={handleSave} style={styles.saveButton}>
+                  💾 Save Changes
+                </button>
+                <button onClick={handleCancel} style={styles.cancelButton}>
+                  ❌ Cancel
+                </button>
+              </>
+            ) : (
+              <button onClick={() => setEditMode(true)} style={styles.editButton}>
+                ✏️ Edit Resume
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -544,4 +631,4 @@ const MyTemplate1 = () => {
   );
 };
 
-export default MyTemplate1;
+export default MyTemplate2;

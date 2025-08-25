@@ -2,30 +2,43 @@ import React, { useState, useRef, useEffect } from "react";
 import Sidebar from "../Sidebar/Sidebar";
 import Navbar from "../Navbar/Navbar";
 import { useResume } from "../../context/ResumeContext";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 
 const MyTemplate1 = () => {
   const resumeRef = useRef(null);
   const { resumeData, setResumeData } = useResume();
   const [editMode, setEditMode] = useState(false);
   const [localData, setLocalData] = useState(resumeData);
-  // Removed theme and font customization options as requested
 
   useEffect(() => {
     setLocalData(resumeData);
   }, [resumeData]);
 
-  // Fixed theme for consistent design
+  // Fixed theme with RGB/hex colors instead of oklch
   const theme = {
-    primary: "from-blue-600 to-blue-800",
-    secondary: "from-gray-700 to-gray-900",
-    accent: "bg-blue-50",
-    text: "text-blue-900",
-    border: "border-blue-200",
-    button: "bg-blue-600 hover:bg-blue-700",
-    card: "bg-white",
-    header: "bg-blue-600",
+    primary: "rgb(37, 99, 235)", // blue-600
+    secondary: "rgb(55, 65, 81)", // gray-700
+    accent: "rgb(239, 246, 255)", // blue-50
+    text: "rgb(30, 58, 138)", // blue-900
+    border: "rgb(191, 219, 254)", // blue-200
+    button: "rgb(37, 99, 235)", // blue-600
+    buttonHover: "rgb(29, 78, 216)", // blue-700
+    card: "rgb(255, 255, 255)",
+    header: "rgb(37, 99, 235)", // blue-600
+    gray50: "rgb(249, 250, 251)",
+    gray100: "rgb(243, 244, 246)",
+    gray200: "rgb(229, 231, 235)",
+    gray300: "rgb(209, 213, 219)",
+    gray500: "rgb(107, 114, 128)",
+    gray600: "rgb(75, 85, 99)",
+    gray700: "rgb(55, 65, 81)",
+    gray900: "rgb(17, 24, 39)",
+    red300: "rgb(252, 165, 165)",
+    red400: "rgb(248, 113, 113)",
+    red500: "rgb(239, 68, 68)",
+    red700: "rgb(185, 28, 28)",
+    red900: "rgb(127, 29, 29)",
+    green500: "rgb(34, 197, 94)",
+    green600: "rgb(22, 163, 74)"
   };
 
   const handleFieldChange = (field, value) => {
@@ -41,7 +54,6 @@ const MyTemplate1 = () => {
   };
 
   const addExperience = () => {
-    // Check if current experiences have required fields filled
     const currentExperiences = localData.experience || [];
     const hasEmptyExperience = currentExperiences.some(exp => 
       !exp.title?.trim() || !exp.companyName?.trim()
@@ -75,7 +87,6 @@ const MyTemplate1 = () => {
   };
 
   const addSkill = () => {
-    // Check if there are any empty skills
     const currentSkills = localData.skills || [];
     const hasEmptySkill = currentSkills.some(skill => !skill?.trim());
     
@@ -96,128 +107,121 @@ const MyTemplate1 = () => {
       skills: prev.skills.filter((_, i) => i !== index)
     }));
   };
-const addLanguage = () => {
-  // Check if there are any empty languages
-  const currentLanguages = localData.languages || [];
-  const hasEmptyLanguage = currentLanguages.some(lang => !lang?.trim());
-  
-  if (hasEmptyLanguage) {
-    alert("Please fill in all existing languages before adding a new one.");
-    return;
-  }
-  
-  setLocalData((prev) => ({
-    ...prev,
-    languages: [...(prev.languages || []), ""],
-  }));
-};
 
-const removeLanguage = (index) => {
-  setLocalData((prev) => ({
-    ...prev,
-    languages: prev.languages.filter((_, i) => i !== index),
-  }));
-};
-
-const addInterest = () => {
-  // Check if there are any empty interests
-  const currentInterests = localData.interests || [];
-  const hasEmptyInterest = currentInterests.some(interest => !interest?.trim());
-  
-  if (hasEmptyInterest) {
-    alert("Please fill in all existing interests before adding a new one.");
-    return;
-  }
-  
-  setLocalData((prev) => ({
-    ...prev,
-    interests: [...(prev.interests || []), ""],
-  }));
-};
-
-const removeInterest = (index) => {
-  setLocalData((prev) => ({
-    ...prev,
-    interests: prev.interests.filter((_, i) => i !== index),
-  }));
-};
-const handleSave = () => {
-  // Validate required fields before saving
-  const errors = [];
-  
-  // Check for empty required fields
-  if (!localData.name?.trim()) errors.push("Name is required");
-  if (!localData.role?.trim()) errors.push("Role/Title is required");
-  
-  // Check for empty experiences with partial data
-  const experiences = localData.experience || [];
-  experiences.forEach((exp, index) => {
-    if ((exp.title?.trim() || exp.companyName?.trim()) && (!exp.title?.trim() || !exp.companyName?.trim())) {
-      errors.push(`Experience ${index + 1}: Both job title and company name are required`);
+  const addLanguage = () => {
+    const currentLanguages = localData.languages || [];
+    const hasEmptyLanguage = currentLanguages.some(lang => !lang?.trim());
+    
+    if (hasEmptyLanguage) {
+      alert("Please fill in all existing languages before adding a new one.");
+      return;
     }
-  });
-  
-  // Check for empty skills
-  const skills = localData.skills || [];
-  const emptySkillsCount = skills.filter(s => !s?.trim()).length;
-  if (emptySkillsCount > 0) {
-    errors.push(`Please fill in all ${emptySkillsCount} empty skill(s) or remove them`);
-  }
-  
-  // Check for empty languages
-  const languages = localData.languages || [];
-  const emptyLanguagesCount = languages.filter(l => !l?.trim()).length;
-  if (emptyLanguagesCount > 0) {
-    errors.push(`Please fill in all ${emptyLanguagesCount} empty language(s) or remove them`);
-  }
-  
-  // Check for empty interests
-  const interests = localData.interests || [];
-  const emptyInterestsCount = interests.filter(i => !i?.trim()).length;
-  if (emptyInterestsCount > 0) {
-    errors.push(`Please fill in all ${emptyInterestsCount} empty interest(s) or remove them`);
-  }
-  
-  if (errors.length > 0) {
-    alert("Please fix the following issues:\n\n" + errors.join("\n"));
-    return;
-  }
-  
-  setResumeData({
-    ...localData,
-    skills: (localData.skills || []).filter(s => s && s.trim()),
-    languages: (localData.languages || []).filter(l => l && l.trim()),
-    interests: (localData.interests || []).filter(i => i && i.trim()),
-    experience: (localData.experience || []).filter(exp => exp.title?.trim() && exp.companyName?.trim()),
-  });
-  setEditMode(false);
-};
+    
+    setLocalData((prev) => ({
+      ...prev,
+      languages: [...(prev.languages || []), ""],
+    }));
+  };
 
+  const removeLanguage = (index) => {
+    setLocalData((prev) => ({
+      ...prev,
+      languages: prev.languages.filter((_, i) => i !== index),
+    }));
+  };
+
+  const addInterest = () => {
+    const currentInterests = localData.interests || [];
+    const hasEmptyInterest = currentInterests.some(interest => !interest?.trim());
+    
+    if (hasEmptyInterest) {
+      alert("Please fill in all existing interests before adding a new one.");
+      return;
+    }
+    
+    setLocalData((prev) => ({
+      ...prev,
+      interests: [...(prev.interests || []), ""],
+    }));
+  };
+
+  const removeInterest = (index) => {
+    setLocalData((prev) => ({
+      ...prev,
+      interests: prev.interests.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleSave = () => {
+    const errors = [];
+    
+    if (!localData.name?.trim()) errors.push("Name is required");
+    if (!localData.role?.trim()) errors.push("Role/Title is required");
+    
+    const experiences = localData.experience || [];
+    experiences.forEach((exp, index) => {
+      if ((exp.title?.trim() || exp.companyName?.trim()) && (!exp.title?.trim() || !exp.companyName?.trim())) {
+        errors.push(`Experience ${index + 1}: Both job title and company name are required`);
+      }
+    });
+    
+    const skills = localData.skills || [];
+    const emptySkillsCount = skills.filter(s => !s?.trim()).length;
+    if (emptySkillsCount > 0) {
+      errors.push(`Please fill in all ${emptySkillsCount} empty skill(s) or remove them`);
+    }
+    
+    const languages = localData.languages || [];
+    const emptyLanguagesCount = languages.filter(l => !l?.trim()).length;
+    if (emptyLanguagesCount > 0) {
+      errors.push(`Please fill in all ${emptyLanguagesCount} empty language(s) or remove them`);
+    }
+    
+    const interests = localData.interests || [];
+    const emptyInterestsCount = interests.filter(i => !i?.trim()).length;
+    if (emptyInterestsCount > 0) {
+      errors.push(`Please fill in all ${emptyInterestsCount} empty interest(s) or remove them`);
+    }
+    
+    if (errors.length > 0) {
+      alert("Please fix the following issues:\n\n" + errors.join("\n"));
+      return;
+    }
+    
+    setResumeData({
+      ...localData,
+      skills: (localData.skills || []).filter(s => s && s.trim()),
+      languages: (localData.languages || []).filter(l => l && l.trim()),
+      interests: (localData.interests || []).filter(i => i && i.trim()),
+      experience: (localData.experience || []).filter(exp => exp.title?.trim() && exp.companyName?.trim()),
+    });
+    setEditMode(false);
+  };
 
   const handleCancel = () => {
     setLocalData(resumeData);
     setEditMode(false);
   };
 
-  // Download functionality moved to Sidebar component
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ backgroundColor: theme.gray50 }}>
       <Navbar />
       <div className="flex">
         <Sidebar resumeRef={resumeRef} />
         <div className="flex-1 p-8">
-          {/* Customization panel removed as requested */}
-
-          {/* Resume Container */}
           <div className="flex justify-center">
             <div
               ref={resumeRef}
-              className="w-[595pt] bg-white shadow-lg border-2 border-gray-300 font-sans"
-              style={{ width: "595pt", minHeight: "842pt" }}
+              className="shadow-lg border-2 font-sans"
+              style={{ 
+                width: "595pt", 
+                minHeight: "842pt",
+                backgroundColor: theme.card,
+                borderColor: theme.gray300
+              }}
             >
               {/* Professional Header */}
-              <div className={`${theme.header} p-6 text-white`}>
+              <div className="p-6 text-white" style={{ backgroundColor: theme.header }}>
                 <div className="text-center">
                   {editMode ? (
                     <>
@@ -225,18 +229,20 @@ const handleSave = () => {
                         type="text"
                         value={localData.name}
                         onChange={(e) => handleFieldChange("name", e.target.value)}
-                        className={`text-3xl font-bold bg-transparent text-white placeholder-white placeholder-opacity-80 w-full mb-2 text-center border-b focus:border-opacity-100 ${
-                          !localData.name?.trim() ? 'border-red-400 border-opacity-80' : 'border-white border-opacity-30'
-                        }`}
+                        className="text-3xl font-bold bg-transparent text-white placeholder-white placeholder-opacity-80 w-full mb-2 text-center border-b focus:border-opacity-100"
+                        style={{ 
+                          borderColor: !localData.name?.trim() ? theme.red400 : 'rgba(255, 255, 255, 0.3)'
+                        }}
                         placeholder="Your Name *"
                       />
                       <input
                         type="text"
                         value={localData.role}
                         onChange={(e) => handleFieldChange("role", e.target.value)}
-                        className={`text-lg bg-transparent text-white placeholder-white placeholder-opacity-80 w-full text-center border-b focus:border-opacity-100 ${
-                          !localData.role?.trim() ? 'border-red-400 border-opacity-80' : 'border-white border-opacity-30'
-                        }`}
+                        className="text-lg bg-transparent text-white placeholder-white placeholder-opacity-80 w-full text-center border-b focus:border-opacity-100"
+                        style={{ 
+                          borderColor: !localData.role?.trim() ? theme.red400 : 'rgba(255, 255, 255, 0.3)'
+                        }}
                         placeholder="Your Title *"
                       />
                     </>
@@ -250,16 +256,20 @@ const handleSave = () => {
               </div>
 
               {/* Contact Info */}
-              <div className="bg-gray-100 p-4 border-b border-gray-200">
-                <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-700">
+              <div className="p-4 border-b" style={{ backgroundColor: theme.gray100, borderColor: theme.gray200 }}>
+                <div className="flex flex-wrap justify-center gap-6 text-sm" style={{ color: theme.gray700 }}>
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-500">📍</span>
+                    <span style={{ color: theme.gray500 }}>📍</span>
                     {editMode ? (
                       <input
                         type="text"
                         value={localData.location}
                         onChange={(e) => handleFieldChange("location", e.target.value)}
-                        className="bg-transparent text-gray-700 placeholder-gray-500 border-b border-gray-300 focus:border-blue-500"
+                        className="bg-transparent border-b focus:outline-none"
+                        style={{ 
+                          color: theme.gray700,
+                          borderColor: theme.gray300
+                        }}
                         placeholder="Location"
                       />
                     ) : (
@@ -267,13 +277,17 @@ const handleSave = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-500">📞</span>
+                    <span style={{ color: theme.gray500 }}>📞</span>
                     {editMode ? (
                       <input
                         type="text"
                         value={localData.phone}
                         onChange={(e) => handleFieldChange("phone", e.target.value)}
-                        className="bg-transparent text-gray-700 placeholder-gray-500 border-b border-gray-300 focus:border-blue-500"
+                        className="bg-transparent border-b focus:outline-none"
+                        style={{ 
+                          color: theme.gray700,
+                          borderColor: theme.gray300
+                        }}
                         placeholder="Phone"
                       />
                     ) : (
@@ -281,13 +295,17 @@ const handleSave = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-500">✉️</span>
+                    <span style={{ color: theme.gray500 }}>✉️</span>
                     {editMode ? (
                       <input
                         type="text"
                         value={localData.email}
                         onChange={(e) => handleFieldChange("email", e.target.value)}
-                        className="bg-transparent text-gray-700 placeholder-gray-500 border-b border-gray-300 focus:border-blue-500"
+                        className="bg-transparent border-b focus:outline-none"
+                        style={{ 
+                          color: theme.gray700,
+                          borderColor: theme.gray300
+                        }}
                         placeholder="Email"
                       />
                     ) : (
@@ -295,13 +313,17 @@ const handleSave = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-500">🔗</span>
+                    <span style={{ color: theme.gray500 }}>🔗</span>
                     {editMode ? (
                       <input
                         type="text"
                         value={localData.linkedin}
                         onChange={(e) => handleFieldChange("linkedin", e.target.value)}
-                        className="bg-transparent text-gray-700 placeholder-gray-500 border-b border-gray-300 focus:border-blue-500"
+                        className="bg-transparent border-b focus:outline-none"
+                        style={{ 
+                          color: theme.gray700,
+                          borderColor: theme.gray300
+                        }}
                         placeholder="LinkedIn"
                       />
                     ) : (
@@ -314,18 +336,19 @@ const handleSave = () => {
               {/* Main Content */}
               <div className="flex min-h-[calc(842pt-200pt)]">
                 {/* Left Sidebar */}
-                <div className="w-1/3 p-6 bg-gray-50 border-r border-gray-200 overflow-y-auto">
+                <div className="w-1/3 p-6 border-r overflow-y-auto" style={{ backgroundColor: theme.gray50, borderColor: theme.gray200 }}>
                   {/* Skills Section */}
                   {(localData.skills?.length > 0 || editMode) && (
                     <div className="mb-8">
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className={`text-lg font-bold ${theme.text} border-b ${theme.border} pb-2`}>
+                        <h3 className="text-lg font-bold border-b pb-2" style={{ color: theme.text, borderColor: theme.border }}>
                           Skills
                         </h3>
                         {editMode && (
                           <button
                             onClick={addSkill}
-                            className="text-sm bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+                            className="text-sm text-white px-2 py-1 rounded"
+                            style={{ backgroundColor: theme.green500 }}
                           >
                             +
                           </button>
@@ -340,20 +363,24 @@ const handleSave = () => {
                                   type="text"
                                   value={skill || ""}
                                   onChange={(e) => handleArrayFieldChange("skills", idx, e.target.value)}
-                                  className={`flex-1 px-3 py-2 rounded font-medium text-sm border focus:border-blue-300 ${
-                                    !skill?.trim() ? 'border-red-300 bg-red-50 text-red-900' : `${theme.accent} ${theme.text} border-transparent`
-                                  }`}
+                                  className="flex-1 px-3 py-2 rounded font-medium text-sm border focus:outline-none"
+                                  style={{
+                                    backgroundColor: !skill?.trim() ? theme.red50 : theme.accent,
+                                    color: !skill?.trim() ? theme.red900 : theme.text,
+                                    borderColor: !skill?.trim() ? theme.red300 : 'transparent'
+                                  }}
                                   placeholder="Skill *"
                                 />
                                 <button
                                   onClick={() => removeSkill(idx)}
-                                  className="text-red-500 hover:text-red-700 text-sm"
+                                  className="text-sm hover:opacity-70"
+                                  style={{ color: theme.red500 }}
                                 >
                                   ×
                                 </button>
                               </>
                             ) : (
-                              <div className={`px-3 py-2 rounded ${theme.accent} ${theme.text} font-medium text-sm break-words`}>
+                              <div className="px-3 py-2 rounded font-medium text-sm break-words" style={{ backgroundColor: theme.accent, color: theme.text }}>
                                 {skill}
                               </div>
                             )}
@@ -366,17 +393,17 @@ const handleSave = () => {
                   {/* Education Section */}
                   {resumeData.education?.length > 0 && (
                     <div className="mb-8">
-                      <h3 className={`text-lg font-bold mb-4 ${theme.text} border-b ${theme.border} pb-2`}>
+                      <h3 className="text-lg font-bold mb-4 border-b pb-2" style={{ color: theme.text, borderColor: theme.border }}>
                         Education
                       </h3>
                       <div className="space-y-4">
                         {resumeData.education.map((edu, idx) => (
-                          <div key={idx} className={`p-4 rounded ${theme.card} border ${theme.border} shadow-sm`}>
-                            <h4 className="font-bold text-gray-900 break-words">{edu.degree}</h4>
-                            <p className="text-sm text-gray-600 break-words">{edu.institution}</p>
-                            <p className="text-xs text-gray-500">{edu.duration}</p>
+                          <div key={idx} className="p-4 rounded border shadow-sm" style={{ backgroundColor: theme.card, borderColor: theme.border }}>
+                            <h4 className="font-bold break-words" style={{ color: theme.gray900 }}>{edu.degree}</h4>
+                            <p className="text-sm break-words" style={{ color: theme.gray600 }}>{edu.institution}</p>
+                            <p className="text-xs" style={{ color: theme.gray500 }}>{edu.duration}</p>
                             {edu.location && (
-                              <p className="text-xs text-gray-500 break-words">{edu.location}</p>
+                              <p className="text-xs break-words" style={{ color: theme.gray500 }}>{edu.location}</p>
                             )}
                           </div>
                         ))}
@@ -384,109 +411,107 @@ const handleSave = () => {
                     </div>
                   )}
 
-                {/* Languages Section */}
-{(localData.languages?.length > 0 || editMode) && (
-  <div className="mb-8">
-    <div className="flex items-center justify-between mb-4">
-      <h3 className={`text-lg font-bold mb-4 ${theme.text} border-b ${theme.border} pb-2`}>
-        Languages
-      </h3>
-      {editMode && (
-        <button
-          onClick={addLanguage}
-          className="text-sm bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
-        >
-          +
-        </button>
-      )}
-    </div>
-    <div className="space-y-2">
-      {(editMode ? localData.languages : (localData.languages || []).filter(l => !!l.trim())).map((lang, idx) => (
-        <div
-          key={idx}
-          className={`flex items-center gap-2 px-3 py-2 rounded ${theme.accent} ${theme.text} text-sm break-words`}
-        >
-          {editMode ? (
-            <>
-              <input
-                type="text"
-                value={lang || ""}
-                onChange={(e) => handleArrayFieldChange("languages", idx, e.target.value)}
-                className={`flex-1 px-3 py-2 rounded font-medium text-sm border focus:border-blue-300 ${
-                  !lang?.trim() ? 'border-red-300 bg-red-50 text-red-900' : `${theme.accent} ${theme.text} border-transparent`
-                }`}
-                placeholder="Language *"
-              />
-              <button
-                onClick={() => removeLanguage(idx)}
-                className="text-red-500 hover:text-red-700 text-sm"
-              >
-                ×
-              </button>
-            </>
-          ) : (
-            <>
-              <span className="font-medium">{lang}</span>
-            </>
-          )}
-        </div>
-      ))}
-    </div>
-  </div>
-)}
+                  {/* Languages Section */}
+                  {(localData.languages?.length > 0 || editMode) && (
+                    <div className="mb-8">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold border-b pb-2" style={{ color: theme.text, borderColor: theme.border }}>
+                          Languages
+                        </h3>
+                        {editMode && (
+                          <button
+                            onClick={addLanguage}
+                            className="text-sm text-white px-2 py-1 rounded"
+                            style={{ backgroundColor: theme.green500 }}
+                          >
+                            +
+                          </button>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        {(editMode ? localData.languages : (localData.languages || []).filter(l => !!l.trim())).map((lang, idx) => (
+                          <div key={idx} className="flex items-center gap-2 px-3 py-2 rounded text-sm break-words" style={{ backgroundColor: theme.accent, color: theme.text }}>
+                            {editMode ? (
+                              <>
+                                <input
+                                  type="text"
+                                  value={lang || ""}
+                                  onChange={(e) => handleArrayFieldChange("languages", idx, e.target.value)}
+                                  className="flex-1 px-3 py-2 rounded font-medium text-sm border focus:outline-none"
+                                  style={{
+                                    backgroundColor: !lang?.trim() ? theme.red50 : theme.accent,
+                                    color: !lang?.trim() ? theme.red900 : theme.text,
+                                    borderColor: !lang?.trim() ? theme.red300 : 'transparent'
+                                  }}
+                                  placeholder="Language *"
+                                />
+                                <button
+                                  onClick={() => removeLanguage(idx)}
+                                  className="text-sm hover:opacity-70"
+                                  style={{ color: theme.red500 }}
+                                >
+                                  ×
+                                </button>
+                              </>
+                            ) : (
+                              <span className="font-medium">{lang}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-{/* Interests Section */}
-{(localData.interests?.length > 0 || editMode) && (
-  <div>
-    <div className="flex items-center justify-between mb-4">
-      <h3 className={`text-lg font-bold mb-4 ${theme.text} border-b ${theme.border} pb-2`}>
-        Interests
-      </h3>
-      {editMode && (
-        <button
-          onClick={addInterest}
-          className="text-sm bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
-        >
-          +
-        </button>
-      )}
-    </div>
-    <div className="space-y-2">
-      {(editMode ? localData.interests : (localData.interests || []).filter(i => !!i.trim())).map((interest, idx) => (
-        <div
-          key={idx}
-          className={`flex items-center gap-2 px-3 py-2 rounded ${theme.accent} ${theme.text} text-sm break-words`}
-        >
-          {editMode ? (
-            <>
-              <input
-                type="text"
-                value={interest || ""}
-                onChange={(e) => handleArrayFieldChange("interests", idx, e.target.value)}
-                className={`flex-1 px-3 py-2 rounded font-medium text-sm border focus:border-blue-300 ${
-                  !interest?.trim() ? 'border-red-300 bg-red-50 text-red-900' : `${theme.accent} ${theme.text} border-transparent`
-                }`}
-                placeholder="Interest *"
-              />
-              <button
-                onClick={() => removeInterest(idx)}
-                className="text-red-500 hover:text-red-700 text-sm"
-              >
-                ×
-              </button>
-            </>
-          ) : (
-            <>
-              {interest}
-            </>
-          )}
-        </div>
-      ))}
-    </div>
-  </div>
-)}
-
-                  
+                  {/* Interests Section */}
+                  {(localData.interests?.length > 0 || editMode) && (
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold border-b pb-2" style={{ color: theme.text, borderColor: theme.border }}>
+                          Interests
+                        </h3>
+                        {editMode && (
+                          <button
+                            onClick={addInterest}
+                            className="text-sm text-white px-2 py-1 rounded"
+                            style={{ backgroundColor: theme.green500 }}
+                          >
+                            +
+                          </button>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        {(editMode ? localData.interests : (localData.interests || []).filter(i => !!i.trim())).map((interest, idx) => (
+                          <div key={idx} className="flex items-center gap-2 px-3 py-2 rounded text-sm break-words" style={{ backgroundColor: theme.accent, color: theme.text }}>
+                            {editMode ? (
+                              <>
+                                <input
+                                  type="text"
+                                  value={interest || ""}
+                                  onChange={(e) => handleArrayFieldChange("interests", idx, e.target.value)}
+                                  className="flex-1 px-3 py-2 rounded font-medium text-sm border focus:outline-none"
+                                  style={{
+                                    backgroundColor: !interest?.trim() ? theme.red50 : theme.accent,
+                                    color: !interest?.trim() ? theme.red900 : theme.text,
+                                    borderColor: !interest?.trim() ? theme.red300 : 'transparent'
+                                  }}
+                                  placeholder="Interest *"
+                                />
+                                <button
+                                  onClick={() => removeInterest(idx)}
+                                  className="text-sm hover:opacity-70"
+                                  style={{ color: theme.red500 }}
+                                >
+                                  ×
+                                </button>
+                              </>
+                            ) : (
+                              <>{interest}</>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Right Content */}
@@ -494,19 +519,20 @@ const handleSave = () => {
                   {/* Summary Section */}
                   {(resumeData.summary || editMode) && (
                     <div className="mb-8">
-                      <h3 className={`text-lg font-bold mb-4 ${theme.text} border-b ${theme.border} pb-2`}>
+                      <h3 className="text-lg font-bold mb-4 border-b pb-2" style={{ color: theme.text, borderColor: theme.border }}>
                         Summary
                       </h3>
                       {editMode ? (
                         <textarea
                           value={localData.summary}
                           onChange={(e) => handleFieldChange("summary", e.target.value)}
-                          className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                          className="w-full p-3 border rounded focus:outline-none resize-none"
+                          style={{ borderColor: theme.gray300 }}
                           rows={4}
                           placeholder="Enter your professional summary..."
                         />
                       ) : (
-                        <p className="text-gray-700 leading-relaxed break-words">{resumeData.summary}</p>
+                        <p className="leading-relaxed break-words" style={{ color: theme.gray700 }}>{resumeData.summary}</p>
                       )}
                     </div>
                   )}
@@ -515,13 +541,14 @@ const handleSave = () => {
                   {(localData.experience?.length > 0 || editMode) && (
                     <div className="mb-8">
                       <div className="flex items-center justify-between mb-6">
-                        <h3 className={`text-lg font-bold ${theme.text} border-b ${theme.border} pb-2`}>
+                        <h3 className="text-lg font-bold border-b pb-2" style={{ color: theme.text, borderColor: theme.border }}>
                           Experience
                         </h3>
                         {editMode && (
                           <button
                             onClick={addExperience}
-                            className="text-sm bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+                            className="text-sm text-white px-3 py-1 rounded"
+                            style={{ backgroundColor: theme.green500 }}
                           >
                             + Add Experience
                           </button>
@@ -530,16 +557,17 @@ const handleSave = () => {
                       <div className="space-y-6">
                         {localData.experience?.map((exp, idx) => (
                           <div key={idx} className="relative">
-                            <div className={`absolute left-0 top-0 w-2 h-2 rounded-full ${theme.button}`}></div>
-                            <div className={`absolute left-0.5 top-2 h-full w-0.5 ${theme.accent}`}></div>
+                            <div className="absolute left-0 top-0 w-2 h-2 rounded-full" style={{ backgroundColor: theme.button }}></div>
+                            <div className="absolute left-0.5 top-2 h-full w-0.5" style={{ backgroundColor: theme.accent }}></div>
                             <div className="pl-6">
                               {editMode ? (
                                 <div className="space-y-3 max-h-96 overflow-y-auto">
                                   <div className="flex items-center justify-between">
-                                    <h4 className="font-bold text-gray-900">Experience #{idx + 1}</h4>
+                                    <h4 className="font-bold" style={{ color: theme.gray900 }}>Experience #{idx + 1}</h4>
                                     <button
                                       onClick={() => removeExperience(idx)}
-                                      className="text-red-500 hover:text-red-700 text-sm"
+                                      className="text-sm hover:opacity-70"
+                                      style={{ color: theme.red500 }}
                                     >
                                       Remove
                                     </button>
@@ -554,9 +582,11 @@ const handleSave = () => {
                                         handleFieldChange("experience", updated);
                                       }
                                     }}
-                                    className={`w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 ${
-                                      !localData.experience[idx]?.title?.trim() ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                                    }`}
+                                    className="w-full p-2 border rounded focus:outline-none"
+                                    style={{
+                                      borderColor: !localData.experience[idx]?.title?.trim() ? theme.red300 : theme.gray300,
+                                      backgroundColor: !localData.experience[idx]?.title?.trim() ? 'rgb(254, 242, 242)' : 'white'
+                                    }}
                                     placeholder="Job Title *"
                                   />
                                   <input
@@ -569,9 +599,11 @@ const handleSave = () => {
                                         handleFieldChange("experience", updated);
                                       }
                                     }}
-                                    className={`w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 ${
-                                      !localData.experience[idx]?.companyName?.trim() ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                                    }`}
+                                    className="w-full p-2 border rounded focus:outline-none"
+                                    style={{
+                                      borderColor: !localData.experience[idx]?.companyName?.trim() ? theme.red300 : theme.gray300,
+                                      backgroundColor: !localData.experience[idx]?.companyName?.trim() ? 'rgb(254, 242, 242)' : 'white'
+                                    }}
                                     placeholder="Company Name *"
                                   />
                                   <div className="flex gap-2">
@@ -585,7 +617,8 @@ const handleSave = () => {
                                           handleFieldChange("experience", updated);
                                         }
                                       }}
-                                      className="w-1/2 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                                      className="w-1/2 p-2 border rounded focus:outline-none"
+                                      style={{ borderColor: theme.gray300 }}
                                       placeholder="Duration"
                                     />
                                     <input
@@ -598,7 +631,8 @@ const handleSave = () => {
                                           handleFieldChange("experience", updated);
                                         }
                                       }}
-                                      className="w-1/2 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                                      className="w-1/2 p-2 border rounded focus:outline-none"
+                                      style={{ borderColor: theme.gray300 }}
                                       placeholder="Location"
                                     />
                                   </div>
@@ -611,20 +645,21 @@ const handleSave = () => {
                                         handleFieldChange("experience", updated);
                                       }
                                     }}
-                                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 resize-none"
+                                    className="w-full p-2 border rounded focus:outline-none resize-none"
+                                    style={{ borderColor: theme.gray300 }}
                                     rows={3}
                                     placeholder="Enter accomplishments (one per line)"
                                   />
                                 </div>
                               ) : (
                                 <>
-                                  <h4 className="font-bold text-gray-900 text-lg break-words">{exp.title}</h4>
-                                  <p className="text-gray-600 font-medium break-words">{exp.companyName}</p>
-                                  <p className="text-sm text-gray-500 break-words">{exp.date} • {exp.companyLocation}</p>
+                                  <h4 className="font-bold text-lg break-words" style={{ color: theme.gray900 }}>{exp.title}</h4>
+                                  <p className="font-medium break-words" style={{ color: theme.gray600 }}>{exp.companyName}</p>
+                                  <p className="text-sm break-words" style={{ color: theme.gray500 }}>{exp.date} • {exp.companyLocation}</p>
                                   <ul className="mt-3 space-y-1">
                                     {exp.accomplishment?.map((item, i) => (
-                                      <li key={i} className="text-gray-700 text-sm flex items-start gap-2">
-                                        <span className="text-blue-600 mt-1 flex-shrink-0">•</span>
+                                      <li key={i} className="text-sm flex items-start gap-2" style={{ color: theme.gray700 }}>
+                                        <span className="mt-1 flex-shrink-0" style={{ color: theme.primary }}>•</span>
                                         <span className="break-words">{item}</span>
                                       </li>
                                     ))}
@@ -641,12 +676,12 @@ const handleSave = () => {
                   {/* Projects Section */}
                   {localData.projects?.length > 0 && (
                     <div>
-                      <h3 className={`text-lg font-bold mb-6 ${theme.text} border-b ${theme.border} pb-2`}>
+                      <h3 className="text-lg font-bold mb-6 border-b pb-2" style={{ color: theme.text, borderColor: theme.border }}>
                         Projects
                       </h3>
                       <div className="space-y-4">
                         {localData.projects.map((proj, idx) => (
-                          <div key={idx} className={`p-4 rounded ${theme.card} border ${theme.border} shadow-sm`}>
+                          <div key={idx} className="p-4 rounded border shadow-sm" style={{ backgroundColor: theme.card, borderColor: theme.border }}>
                             {editMode ? (
                               <div className="space-y-3">
                                 <input
@@ -659,7 +694,8 @@ const handleSave = () => {
                                       handleFieldChange("projects", updated);
                                     }
                                   }}
-                                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                                  className="w-full p-2 border rounded focus:outline-none"
+                                  style={{ borderColor: theme.gray300 }}
                                   placeholder="Project Name"
                                 />
                                 <textarea
@@ -671,7 +707,8 @@ const handleSave = () => {
                                       handleFieldChange("projects", updated);
                                     }
                                   }}
-                                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 resize-none"
+                                  className="w-full p-2 border rounded focus:outline-none resize-none"
+                                  style={{ borderColor: theme.gray300 }}
                                   rows={2}
                                   placeholder="Project Description"
                                 />
@@ -685,20 +722,22 @@ const handleSave = () => {
                                       handleFieldChange("projects", updated);
                                     }
                                   }}
-                                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                                  className="w-full p-2 border rounded focus:outline-none"
+                                  style={{ borderColor: theme.gray300 }}
                                   placeholder="Project Link (optional)"
                                 />
                               </div>
                             ) : (
                               <>
-                                <h4 className="font-bold text-gray-900 break-words">{proj.name}</h4>
-                                <p className="text-gray-700 text-sm mt-2 break-words">{proj.description}</p>
+                                <h4 className="font-bold break-words" style={{ color: theme.gray900 }}>{proj.name}</h4>
+                                <p className="text-sm mt-2 break-words" style={{ color: theme.gray700 }}>{proj.description}</p>
                                 {proj.link && (
                                   <a
                                     href={proj.link}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className={`inline-block mt-2 text-sm ${theme.text} hover:underline break-all`}
+                                    className="inline-block mt-2 text-sm hover:underline break-all"
+                                    style={{ color: theme.text }}
                                   >
                                     🔗 View Project
                                   </a>
@@ -721,13 +760,15 @@ const handleSave = () => {
               <>
                 <button
                   onClick={handleSave}
-                  className={`px-6 py-3 rounded-lg text-white font-medium transition-all ${theme.button}`}
+                  className="px-6 py-3 rounded-lg text-white font-medium transition-all"
+                  style={{ backgroundColor: theme.button }}
                 >
                   💾 Save Changes
                 </button>
                 <button
                   onClick={handleCancel}
-                  className="px-6 py-3 rounded-lg bg-gray-500 text-white font-medium hover:bg-gray-600 transition-all"
+                  className="px-6 py-3 rounded-lg text-white font-medium transition-all"
+                  style={{ backgroundColor: theme.gray500 }}
                 >
                   ❌ Cancel
                 </button>
@@ -735,7 +776,8 @@ const handleSave = () => {
             ) : (
               <button
                 onClick={() => setEditMode(true)}
-                className={`px-6 py-3 rounded-lg text-white font-medium transition-all ${theme.button}`}
+                className="px-6 py-3 rounded-lg text-white font-medium transition-all"
+                style={{ backgroundColor: theme.button }}
               >
                 ✏️ Edit Resume
               </button>
